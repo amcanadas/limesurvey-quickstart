@@ -10,10 +10,9 @@
 * other free or open source software licenses.
 * See COPYRIGHT.php for copyright notices and details.
 *
-*	$Id$
 */
 
-class User extends CActiveRecord
+class User extends LSActiveRecord
 {
     /**
     * @var string Default value for user language
@@ -158,7 +157,6 @@ class User extends CActiveRecord
         if ($oUser->save())
         {
             return $oUser->uid;
-
         }
         else{
             return false;
@@ -181,7 +179,6 @@ class User extends CActiveRecord
         {
             $this->password=stream_get_contents($this->password,-1,0); 
         }
-        
         return parent::beforeSave();
     }
     
@@ -195,8 +192,8 @@ class User extends CActiveRecord
     function deleteUser($iUserID)
     {
         $iUserID= (int)$iUserID;
-        $iRecordsAffected = Yii::app()->db->createCommand()->from('{{users}}')->delete('{{users}}', "uid={$iUserID}");
-        return (bool) $iRecordsAffected;
+        $oUser=$this->findByPk($iUserID);
+        return (bool) $oUser->delete();
     }
 
     /**
@@ -242,24 +239,26 @@ class User extends CActiveRecord
     * @access public
     * @return string
     */
-    public function getID($fullname)
+    public function getID($sUserName)
     {
-        $this->db->select('uid');
-        $this->db->from('users');
-        $this->db->where(array("full_name"=>Yii::app()->db->quoteValue($fullname)));
-        $result = $this->db->get();
-        return $result->row();
+        $oUser = User::model()->findByAttributes(array(
+            'users_name' => $sUserName
+        ));
+        if ($oUser)
+        {
+            return $oUser->uid;
+        }
     }
 
     /**
-    * Updates user password
-    *
-    * @access public
-    * @return string
+    * Updates user password hash
+    * 
+    * @param int $iUserID The User ID
+    * @param string $sPassword The clear text password
     */
-    public function updatePassword($uid,$password)
+    public function updatePassword($iUserID, $sPassword)
     {
-        return $this->updateByPk($uid, array('password' => $password));
+        return $this->updateByPk($iUserID, array('password' => hash('sha256', $sPassword)));
     }
 
     /**
@@ -282,7 +281,15 @@ class User extends CActiveRecord
     */
     public function getCommonUID($surveyid, $postusergroupid)
     {
-        $query2 = "SELECT b.uid FROM (SELECT uid FROM {{survey_permissions}} WHERE sid = :surveyid) AS c RIGHT JOIN {{user_in_groups}} AS b ON b.uid = c.uid WHERE c.uid IS NULL AND b.ugid = :postugid";
+        $query2 = "SELECT b.uid FROM (SELECT uid FROM {{permissions}} WHERE entity_id = :surveyid AND entity = 'survey') AS c RIGHT JOIN {{user_in_groups}} AS b ON b.uid = c.uid WHERE c.uid IS NULL AND b.ugid = :postugid";
         return Yii::app()->db->createCommand($query2)->bindParam(":surveyid", $surveyid, PDO::PARAM_INT)->bindParam(":postugid", $postusergroupid, PDO::PARAM_INT)->query(); //Checked
     }
+
+
+	public function relations()
+	{
+		return array(
+			'permissions' => array(self::HAS_MANY, 'Permission', 'uid')
+		);
+	}
 }

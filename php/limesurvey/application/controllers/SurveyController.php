@@ -10,7 +10,6 @@
 * other free or open source software licenses.
 * See COPYRIGHT.php for copyright notices and details.
 *
-*	$Id$
 */
 class SurveyController extends LSYii_Controller
 {
@@ -25,8 +24,6 @@ class SurveyController extends LSYii_Controller
     protected function _init()
     {
         parent::_init();
-
-        $this->_sessioncontrol();
 
         unset(Yii::app()->session['FileManagerContext']);
 
@@ -51,10 +48,7 @@ class SurveyController extends LSYii_Controller
     {
         if (!Yii::app()->session["adminlang"] || Yii::app()->session["adminlang"]=='')
             Yii::app()->session["adminlang"] = Yii::app()->getConfig("defaultlang");
-
-        Yii::import('application.libraries.Limesurvey_lang');
-        $this->lang = new Limesurvey_lang(Yii::app()->session['adminlang']);
-        Yii::app()->setLang($this->lang);
+        Yii::app()->setLanguage(Yii::app()->session['adminlang']);
     }
 
     /**

@@ -1,7 +1,7 @@
 <?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 /*
  * LimeSurvey
- * Copyright (C) 2007 The LimeSurvey Project Team / Carsten Schmitz
+ * Copyright (C) 2013 The LimeSurvey Project Team / Carsten Schmitz
  * All rights reserved.
  * License: GNU/GPL License v2 or later, see LICENSE.php
  * LimeSurvey is free software. This version may have been modified pursuant
@@ -19,10 +19,12 @@
  *
  * @package LimeSurvey
  * @copyright 2011
- * @version $Id$
- * @access public
+  * @access public
  */
 class OptinController extends LSYii_Controller {
+
+     public $layout = 'bare';
+     public $defaultAction = 'tokens';
 
     function actiontokens($surveyid, $token, $langcode = '')
     {
@@ -35,7 +37,7 @@ class OptinController extends LSYii_Controller {
 
         if (!$iSurveyID)
         {
-            $this->redirect($this->getController()->createUrl('/'));
+            $this->redirect(array('/'));
         }
         $iSurveyID = (int)$iSurveyID;
 
@@ -43,74 +45,70 @@ class OptinController extends LSYii_Controller {
         // Get passed language from form, so that we dont loose this!
         if (!isset($sLanguageCode) || $sLanguageCode == "" || !$sLanguageCode)
         {
-            $baselang = Survey::model()->findByPk($iSurveyID)->language;
-            Yii::import('application.libraries.Limesurvey_lang', true);
-            $clang = new Limesurvey_lang($baselang);
+            $sBaseLanguage = Survey::model()->findByPk($iSurveyID)->language;
         }
         else
         {
-            $sLanguageCode = sanitize_languagecode($sLanguageCode);
-            Yii::import('application.libraries.Limesurvey_lang', true);
-            $clang = new Limesurvey_lang($sLanguageCode);
-            $baselang = $sLanguageCode;
+            $sBaseLanguage = sanitize_languagecode($sLanguageCode);
         }
 
-        Yii::app()->lang = $clang;
+        Yii::app()->setLanguage($sBaseLanguage);
 
-        $thissurvey=getSurveyInfo($iSurveyID,$baselang);
+        $aSurveyInfo=getSurveyInfo($iSurveyID,$sBaseLanguage);
 
-        if ($thissurvey == false || !tableExists("{{tokens_{$iSurveyID}}}"))
+        if ($aSurveyInfo == false || !tableExists("{{tokens_{$iSurveyID}}}"))
         {
-            $html = $clang->gT('This survey does not seem to exist.');
+            throw new CHttpException(404, "This survey does not seem to exist. It may have been deleted or the link you were given is outdated or incorrect.");
         }
         else
         {
-            $row = Tokens_dynamic::model($iSurveyID)->getEmailStatus($sToken);
+            LimeExpressionManager::singleton()->loadTokenInformation($iSurveyID,$token,false);
+            $oToken = Token::model($iSurveyID)->findByAttributes(array('token' => $token));
 
-            if ($row == false)
+            if (!isset($oToken))
             {
-                $html = $clang->gT('You are not a participant in this survey.');
+                $sMessage = gT('You are not a participant in this survey.');
             }
             else
             {
-                $usresult = $row['emailstatus'];
-                if ($usresult=='OptOut')
+                if ($oToken->emailstatus =='OptOut')
                 {
-                    $usresult = Tokens_dynamic::model($iSurveyID)->updateEmailStatus($sToken, 'OK');
-                    $html = $clang->gT('You have been successfully added back to this survey.');
+                    $oToken->emailstatus = 'OK';
+                    $oToken->save();
+                    $sMessage = gT('You have been successfully added back to this survey.');
                 }
-                else if ($usresult=='OK')
+                elseif ($oToken->emailstatus == 'OK')
                 {
-                    $html = $clang->gT('You are already a part of this survey.');
+                    $sMessage = gT('You are already a part of this survey.');
                 }
                 else
                 {
-                    $html = $clang->gT('You have been already removed from this survey.');
+                    $sMessage = gT('You have been already removed from this survey.');
                 }
             }
         }
 
         //PRINT COMPLETED PAGE
-        if (!$thissurvey['templatedir'])
+        if (!$aSurveyInfo['templatedir'])
         {
-            $thistpl=getTemplatePath(Yii::app()->getConfig("defaulttemplate"));
+            $sTemplate=getTemplatePath(Yii::app()->getConfig("defaulttemplate"));
         }
         else
         {
-            $thistpl=getTemplatePath($thissurvey['templatedir']);
+            $sTemplate=getTemplatePath($aSurveyInfo['templatedir']);
         }
-        $this->_renderHtml($html,$thistpl,$clang,$thissurvey);
+        $this->_renderHtml($sMessage,$sTemplate,$aSurveyInfo);
     }
 
-    private function _renderHtml($html,$thistpl, $oLanguage, $aSurveyInfo)
+    private function _renderHtml($html,$thistpl, $aSurveyInfo)
     {
         sendCacheHeaders();
         doHeader();
-        $aSupportData=array('thissurvey'=>$aSurveyInfo, 'clang'=>$oLanguage);
+        $aSupportData=array('thissurvey'=>$aSurveyInfo);
         echo templatereplace(file_get_contents($thistpl.DIRECTORY_SEPARATOR.'startpage.pstpl'),array(), $aSupportData);
-        $data['html'] = $html;
-        $data['thistpl'] = $thistpl;
-        $this->render('/opt_view',$data);
+        $aData['html'] = $html;
+        $aData['thistpl'] = $thistpl;
+        $this->render('/opt_view',$aData);
         echo templatereplace(file_get_contents($thistpl.DIRECTORY_SEPARATOR.'endpage.pstpl'),array(), $aSupportData);
         doFooter();
     }

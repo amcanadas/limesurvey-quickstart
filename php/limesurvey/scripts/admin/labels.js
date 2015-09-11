@@ -9,6 +9,16 @@
 * other free or open source software licenses.
 * See COPYRIGHT.php for copyright notices and details.
 */
+
+/**
+* delete button
+*/
+$(document).on('click','[data-action="deletelabelset"]',function(event){
+    event.preventDefault();
+    if(confirm($(this).data('confirm'))){
+        sendPost($(this).data('url'),'',['action','lid'],[$(this).data('action'),$('[name="lid"]').val()]);
+    }
+});
 $(document).ready(function(){
     $('#btnDumpLabelSets').click(function(){
         if ($('#labelsets > option:selected').size()==0)
@@ -27,21 +37,22 @@ $(document).ready(function(){
     if ($(".answertable tbody").children().length == 0)
         add_label(undefined);
 
-
-    $(".btnaddanswer").live('click',add_label);
-    $(".btndelanswer").live('click',del_label);
+    $(document).on('click', '.btnaddanswer', add_label);
+    $(document).on('click', '.btndelanswer', del_label);
 
     $('#neweditlblset0 .answertable tbody').sortable({
         update:sort_complete,
         distance:2
     });
 
-    $('#quickadd').dialog({autoOpen: false,
+    $('#quickadd').dialog({
+        autoOpen: false,
         modal: true,
         width:600,
-        title: $("#quickadd").attr('name')});
+        title: quickaddtitle
+    });
 
-    $('.btnquickadd').live('click',function(){
+    $('.btnquickadd').click(function(){
         $('#quickadd').dialog('open');
     });
 
@@ -105,9 +116,9 @@ function quickaddfunction(){
     }
 
     lsrows=$('#quickaddarea').val().split("\n");
-    var seperatorchar="\t";
+    var separatorchar="\t";
     if (lsrows[0].indexOf("\t")==-1){
-        seperatorchar=';'
+        separatorchar=';';
     }
 
 
@@ -115,21 +126,16 @@ function quickaddfunction(){
     $(lsrows).each(function(index,element){
         code = undefined;
 
-        params = element.split(seperatorchar);
+        params = element.split(separatorchar);
         k = 0;
         if (params.length > $(".lslanguage").length){
             code = params[0].replace(/[^a-zA-Z 0-9]+/g,'').substr(0,5);
             k++;
         }
 
-        if (index!=0 || (!lsreplace && $("#tabs div[id^='newedit']:not(:last) tbody>tr").length > 0)){
-            event = {};
-            event.target = $(".btnaddanswer:last");
-            var retcode = add_label(event);
-        }
-        else{
-            var retcode = add_label();
-        }
+		event = {};
+		event.target = $(".btnaddanswer:last");
+		var retcode = add_label(event);
 
         if (typeof(code)!="undefined") {
             $("#code_"+retcode).val(code);
@@ -360,7 +366,7 @@ function code_duplicates_check()
         sValue=$.trim($(this).val());
         $(this).val(sValue);
         codearray.push(sValue);
-    })
+    });
     if ($.inArray('other', codearray)!=-1)
     {
         alert(otherisreserved);

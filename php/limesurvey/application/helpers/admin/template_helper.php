@@ -10,19 +10,12 @@
 * other free or open source software licenses.
 * See COPYRIGHT.php for copyright notices and details.
 *
-*	$Id$
 */
 
 
 function doreplacement($file,$data) { //Produce sample page from template file
-    /**
-    $output=array();
-    foreach(file($file) as $op) {
-    $output[]=templatereplace($op);
-    }
-    return $output;
-    */
-    return (array)templatereplace(file_get_contents($file),array(),$data);
+    $aReplacements=isset($data['aReplacements']) ? $data['aReplacements'] : array();
+    return (array)templatereplace(file_get_contents($file),$aReplacements,$data);
 }
 
 
@@ -153,9 +146,12 @@ function is_template_editable($templatename)
 */
 function templateExtractFilter($p_event, &$p_header)
 {
-    $aAllowExtensions=explode(',',Yii::app()->getConfig('allowedresourcesuploads'));    
+    $aAllowExtensions=explode(',',Yii::app()->getConfig('allowedtemplateuploads'));    
+    $aAllowExtensions[]='pstpl'; 
     $info = pathinfo($p_header['filename']);
-    if ($p_header['folder'] || in_array($info['extension'],$aAllowExtensions)) {
+    // Deny files with multiple extensions in general
+    if (substr_count($info['basename'],'.')!=1) return 0;
+    if ($p_header['folder'] || !isset($info['extension']) || in_array($info['extension'],$aAllowExtensions)) {
         return 1;
     }
     else {

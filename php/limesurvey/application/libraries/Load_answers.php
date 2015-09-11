@@ -10,7 +10,6 @@
  * other free or open source software licenses.
  * See COPYRIGHT.php for copyright notices and details.
  *
- *	$Id$
  */
 class Load_answers {
 
@@ -29,11 +28,10 @@ class Load_answers {
 		."\t}\n"
 		."\t</script>\n\n";
 
-        echo CHtml::form(array("/survey/index"), 'post')."\n";
+        echo CHtml::form(array("/survey/index","sid"=>$surveyid), 'post')."\n";
 		echo templatereplace(file_get_contents($sTemplatePath."load.pstpl"),array(),$redata);
 		//PRESENT OPTIONS SCREEN (Replace with Template Later)
 		//END
-		echo "<input type='hidden' name='sid' value='{$surveyid}' />\n";
 		echo "<input type='hidden' name='loadall' value='reload' />\n";
 		if (isset($clienttoken) && $clienttoken != "")
 		{

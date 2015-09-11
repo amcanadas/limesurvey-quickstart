@@ -1,4 +1,4 @@
-<?php 
+<?php
 /*
 * LimeSurvey
 * Copyright (C) 2007-2011 The LimeSurvey Project Team / Carsten Schmitz
@@ -12,14 +12,25 @@
 */
 
 /**
+ * Load the globals helper as early as possible. Only earlier solution is to use
+ * index.php
+ */
+require_once(dirname(dirname(__FILE__)) . '/helpers/globals.php');
+
+/**
 * Implements global  config
+* @property CLogRouter $log Log router component.
 */
 class LSYii_Application extends CWebApplication
 {
     protected $config = array();
-    public $lang = null;
 
     /**
+     * @var LimesurveyApi
+     */
+    protected $api;
+    /**
+     *
     * Initiates the application
     *
     * @access public
@@ -28,82 +39,20 @@ class LSYii_Application extends CWebApplication
     */
     public function __construct($config = null)
     {
-        if (is_string($config) && !file_exists($config))
-        {
-            $config = APPPATH . 'config/config-sample-mysql' . EXT;
-        } 
-        if(is_string($config)) {
-            $config = require($config);
-        }
-        
-        if ($config['config']['debug'] == 2)
-        {
-            // If debug = 2 we add firebug / console logging for all trace messages
-            // If you want to var_dump $config you could do:
-            // 
-            // Yii::trace(CVarDumper::dumpAsString($config), 'vardump');
-            // 
-            // or shorter:
-            // 
-            //traceVar($config);
-            // 
-            // This statement won't cause any harm or output when debug is 1 or 0             
-            $config['preload'][] = 'log';
-            if (array_key_exists('components', $config) && array_key_exists('log', $config['components'])) {
-                // We already have some custom logging, only add our own
-            } else {
-                // No logging yet, set it up
-                $config['components']['log'] = array(
-                    'class' => 'CLogRouter');
-            }
-            // Add logging of trace
-            $config['components']['log']['routes'][] = array(
-                'class'                      => 'CWebLogRoute', // you can include more levels separated by commas... trace is shown on debug only
-                'levels'                     => 'trace',        // you can include more separated by commas
-                'categories'                 => 'vardump',      // show in firebug/console
-                'showInFireBug'              => true
-            );
-            
-            // if debugsql = 1 we add sql logging to the output
-            if (array_key_exists('debugsql', $config['config']) && $config['config']['debugsql'] == 1) {
-                // Add logging of trace
-                $config['components']['log']['routes'][] = array(
-                    'class'                      => 'CWebLogRoute', // you can include more levels separated by commas... trace is shown on debug only
-                    'levels'                     => 'trace',        // you can include more separated by commas
-                    'categories'                 => 'system.db.*',      // show in firebug/console
-                    'showInFireBug'              => true
-                );
-                $config['components']['db']['enableProfiling'] = true;
-                $config['components']['db']['enableParamLogging'] = true;
-            }
-        }
-
-        if (!isset($config['components']['request']))
-        {
-            $config['components']['request']=array();
-        }
-        $config['components']['request']=array_merge_recursive($config['components']['request'],array(
-            'class'=>'LSHttpRequest',
-            'noCsrfValidationRoutes'=>array(
-//              '^services/wsdl.*$'   // Set here additional regex rules for routes not to be validate 
-                'getTokens_json',
-                'getSurveys_json',
-                'remotecontrol'
-            ),
-            'enableCsrfValidation'=>false,    // Enable to activate CSRF protection
-            'enableCookieValidation'=>false   // Enable to activate cookie protection
-        ));
-
         parent::__construct($config);
+        Yii::setPathOfAlias('bootstrap' , Yii::getPathOfAlias('ext.bootstrap'));
         // Load the default and environmental settings from different files into self.
-        $ls_config = require(APPPATH . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'config-defaults.php');
-        $email_config = require(APPPATH . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'email.php');
-        $version_config = require(APPPATH . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'version.php');
-        $settings = array_merge($ls_config, $version_config, $email_config);
-        
-        if(file_exists(APPPATH . DIRECTORY_SEPARATOR. 'config' . DIRECTORY_SEPARATOR . 'config.php'))
+        $ls_config = require(__DIR__ . '/../config/config-defaults.php');
+        $email_config = require(__DIR__ . '/../config/email.php');
+        $version_config = require(__DIR__ . '/../config/version.php');
+
+	$updater_version_config = require(__DIR__ . '/../config/updater_version.php');
+        $settings = array_merge($ls_config, $version_config, $email_config, $updater_version_config);
+
+
+        if(file_exists(__DIR__ . '/../config/config.php'))
         {
-            $ls_config = require(APPPATH . DIRECTORY_SEPARATOR. 'config' . DIRECTORY_SEPARATOR . 'config.php');
+            $ls_config = require(__DIR__ . '/../config/config.php');
             if(is_array($ls_config['config']))
             {
                 $settings = array_merge($settings, $ls_config['config']);
@@ -111,11 +60,30 @@ class LSYii_Application extends CWebApplication
         }
 
         foreach ($settings as $key => $value)
-        {
             $this->setConfig($key, $value);
-        }        
+
+        App()->getAssetManager()->setBaseUrl(Yii::app()->getBaseUrl(false) . '/tmp/assets');
     }
 
+
+	public function init() {
+		parent::init();
+        $this->initLanguage();
+        // These take care of dynamically creating a class for each token / response table.
+		Yii::import('application.helpers.ClassFactory');
+		ClassFactory::registerClass('Token_', 'Token');
+		ClassFactory::registerClass('Response_', 'Response');
+	}
+
+    public function initLanguage()
+    {
+        // Set language to use.
+        if ($this->request->getParam('lang') !== null)
+        {
+            $this->setLanguage($this->request->getParam('lang'));
+        }
+
+    }
     /**
     * Loads a helper
     *
@@ -154,6 +122,28 @@ class LSYii_Application extends CWebApplication
     }
 
     /**
+     * Set a 'flash message'.
+     *
+     * A flahs message will be shown on the next request and can contain a message
+     * to tell that the action was successful or not. The message is displayed and
+     * cleared when it is shown in the view using the widget:
+     * <code>
+     * $this->widget('application.extensions.FlashMessage.FlashMessage');
+     * </code>
+     *
+     * @param string $message
+     * @param string $type
+     * @return LSYii_Application Provides a fluent interface
+     */
+    public function setFlashMessage($message,$type='default')
+    {
+        $aFlashMessage=$this->session['aFlashMessage'];
+        $aFlashMessage[]=array('message'=>$message,'type'=>$type);
+        $this->session['aFlashMessage'] = $aFlashMessage;
+        return $this;
+    }
+
+    /**
     * Loads a config from a file
     *
     * @access public
@@ -175,11 +165,12 @@ class LSYii_Application extends CWebApplication
     *
     * @access public
     * @param string $name
+    * @param type $default Value to return when not found, default is false
     * @return mixed
     */
-    public function getConfig($name)
+    public function getConfig($name, $default = false)
     {
-        return isset($this->config[$name]) ? $this->config[$name] : false;
+        return isset($this->config[$name]) ? $this->config[$name] : $default;
     }
 
 
@@ -187,30 +178,35 @@ class LSYii_Application extends CWebApplication
     * For future use, cache the language app wise as well.
     *
     * @access public
-    * @param Limesurvey_lang
     * @return void
     */
-    public function setLang(Limesurvey_lang $lang)
+    public function setLanguage( $sLanguage )
     {
-        $this->lang = $lang;
+        $this->messages->catalog = $sLanguage;
+        parent::setLanguage($sLanguage);
     }
+
+    /**
+     * Get the Api object.
+     */
+    public function getApi()
+    {
+        if (!isset($this->api))
+        {
+            $this->api = new \ls\pluginmanager\LimesurveyApi();
+        }
+        return $this->api;
+    }
+    /**
+     * Get the pluginManager
+     *
+     * @return PluginManager
+     */
+    public function getPluginManager()
+    {
+        return $this->getComponent('pluginManager');
+    }
+
 
 }
 
-/**
- * If debug = 2 in application/config.php this will produce output in the console / firebug
- * similar to var_dump. It will also include the filename and line that called this method.
- * 
- * @param mixed $variable The variable to be dumped
- * @param int $depth Maximum depth to go into the variable, default is 10
- */
-function traceVar($variable, $depth = 10) {
-    $msg = CVarDumper::dumpAsString($variable, $depth, false);
-    $fullTrace = debug_backtrace();
-    $trace=array_shift($fullTrace);
-	if(isset($trace['file'],$trace['line']) && strpos($trace['file'],YII_PATH)!==0)
-	{
-        $msg = $trace['file'].' ('.$trace['line']."):\n" . $msg;
-    }
-    Yii::trace($msg, 'vardump');
-}

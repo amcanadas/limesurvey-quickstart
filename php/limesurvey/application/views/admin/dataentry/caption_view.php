@@ -1,10 +1,10 @@
-<div class='header ui-widget-header'><?php $clang->eT("Data entry"); ?></div>
+<div class='header ui-widget-header'><?php eT("Data entry"); ?></div>
 
         <?php echo CHtml::form(array("admin/dataentry/sa/insert"), 'post', array('name'=>'addsurvey', 'id'=>'addsurvey', 'enctype'=>'multipart/form-data'));?>
             <table class='data-entry-tbl'>
             <tr>
             <td colspan='3'>
-            <strong><?php echo $thissurvey['name']; ?></strong>
+            <strong><?php echo stripJavaScript($thissurvey['name']); ?></strong>
             <br /><?php echo flattenText($thissurvey['description'],true); ?>
             </td>
             </tr>
@@ -26,28 +26,27 @@
             { ?>
                 <tr>
                 <td valign='top' width='1%'></td>
-                <td valign='top' align='right' width='30%'><font color='red'>*</font><strong><?php echo $blang->gT("Token"); ?>:</strong></td>
+                <td valign='top' align='right' width='30%'><font color='red'>*</font><strong><?php echo gT("Token",'html',$sDataEntryLanguage); ?>:</strong></td>
                 <td valign='top'  align='left' style='padding-left: 20px'>
                 <input type='text' id='token' name='token' onkeyup='activateSubmit(this);' />
                 </td>
                 </tr>
 
-                <tr class='data-entry-separator'><td colspan='3'></td></tr>
-
-
+                <tr class='data-entry-separator'><td colspan='3'>
                 <script type="text/javascript"><!--
                 function activateSubmit(me)
                 {
                     if (me.value != '')
                     {
-                        document.getElementById('submitdata').disabled = false;
+                        $('#submitdata').button("option", "disabled", false);
                     }
                     else
                     {
-                        document.getElementById('submitdata').disabled = true;
+                        $('#submitdata').button("option", "disabled", true);
                     }
                 }
                 //--></script>
+                </td></tr>                
             <?php }
 
 
@@ -57,7 +56,7 @@
                 <tr>
                 <td valign='top' width='1%'></td>
                 <td valign='top' align='right' width='30%'><strong>
-                <?php echo $blang->gT("Datestamp"); ?>:</strong></td>
+                <?php echo gT("Datestamp",'html',$sDataEntryLanguage); ?>:</strong></td>
                 <td valign='top'  align='left' style='padding-left: 20px'>
                 <input type='text' name='datestamp' value='<?php echo $localtimedate; ?>' />
                 </td>
@@ -71,7 +70,7 @@
                 <tr>
                 <td valign='top' width='1%'></td>
                 <td valign='top' align='right' width='30%'><strong>
-                <?php echo $blang->gT("IP address"); ?>:</strong></td>
+                <?php echo gT("IP address",'html',$sDataEntryLanguage); ?>:</strong></td>
                 <td valign='top'  align='left' style='padding-left: 20px'>
                 <input type='text' name='ipaddr' value='NULL' />
                 </td>

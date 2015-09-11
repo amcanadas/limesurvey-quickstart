@@ -10,19 +10,18 @@
  * other free or open source software licenses.
  * See COPYRIGHT.php for copyright notices and details.
  *
- *	$Id$
  */
 class Index extends Survey_Common_Action
 {
 
     public function run()
     {
-        $clang = Yii::app()->lang;
+        
 
         if (Yii::app()->session['just_logged_in'])
         {
             $aViewUrls = array('message' => array(
-                'title' => $clang->gT("Logged in"),
+                'title' => gT("Logged in"),
                 'message' => Yii::app()->session['loginsummary']
             ));
             unset(Yii::app()->session['just_logged_in'], Yii::app()->session['loginsummary']);
@@ -35,7 +34,7 @@ class Index extends Survey_Common_Action
 		}
         else
         {
-            Yii::app()->request->redirect(Yii::app()->getController()->createUrl('admin/survey/sa/index'));
+            $this->getController()->redirect(array('admin/survey/sa/index'));
         }
 
     }

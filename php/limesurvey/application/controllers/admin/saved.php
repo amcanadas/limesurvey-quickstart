@@ -10,7 +10,6 @@
  * other free or open source software licenses.
  * See COPYRIGHT.php for copyright notices and details.
  *
- *	$Id$
  */
 
 /**
@@ -18,8 +17,7 @@
  *
  * @package LimeSurvey
  * @copyright 2011
- * @version $Id$
- * @access public
+  * @access public
  */
 class saved extends Survey_Common_Action
 {
@@ -27,22 +25,26 @@ class saved extends Survey_Common_Action
     public function view($iSurveyId)
     {
         $iSurveyId = sanitize_int($iSurveyId);
-        $clang = $this->getController()->lang;
         $aViewUrls = array();
 
-        if (!hasSurveyPermission($iSurveyId, 'responses', 'read'))
+        if (!Permission::model()->hasSurveyPermission($iSurveyId, 'responses', 'read'))
         {
             die();
         }
-
-        $this->getController()->_js_admin_includes(Yii::app()->getConfig('generalscripts') . 'jquery/jquery.tablesorter.min.js');
-        $this->getController()->_js_admin_includes(Yii::app()->getConfig('adminscripts') . 'saved.js');
 
         $aThisSurvey = getSurveyInfo($iSurveyId);
         $aData['sSurveyName'] = $aThisSurvey['name'];
         $aData['iSurveyId'] = $iSurveyId;
         $aViewUrls[] = 'savedbar_view';
         $aViewUrls['savedlist_view'][] = $this->_showSavedList($iSurveyId);
+
+        // saved.js bugs if table is empty
+        if (count($aViewUrls['savedlist_view'][0]['aResults']))
+        {
+            App()->getClientScript()->registerPackage('jquery-tablesorter');
+            App()->getClientScript()->registerScriptFile(Yii::app()->getConfig('adminscripts') . 'saved.js');            
+        }
+
 
         $this->_renderWrappedTemplate('saved', $aViewUrls, $aData);
     }
@@ -52,12 +54,10 @@ class saved extends Survey_Common_Action
      */
     public function delete($iSurveyId, $iSurveyResponseId, $iSavedControlId)
     {
-        $clang = $this->getController()->lang;
+        SavedControl::model()->deleteAllByAttributes(array('scid' => $iSavedControlId, 'sid' => $iSurveyId)) or die(gT("Couldn't delete"));
+        Yii::app()->db->createCommand()->delete("{{survey_".intval($iSurveyId)."}}", 'id=:id', array('id' => $iSurveyResponseId)) or die(gT("Couldn't delete"));
 
-        Saved_control::model()->deleteAllByAttributes(array('scid' => $iSavedControlId, 'sid' => $iSurveyId)) or die($clang->gT("Couldn't delete"));
-        Yii::app()->db->createCommand()->delete("{{survey_".intval($iSurveyId)."}}", 'id=:id', array('id' => $iSurveyResponseId)) or die($clang->gT("Couldn't delete"));
-
-        $this->getController()->redirect($this->getController()->createUrl("admin/saved/sa/view/surveyid/{$iSurveyId}"));
+        $this->getController()->redirect(array("admin/saved/sa/view/surveyid/{$iSurveyId}"));
     }
 
     /**
@@ -79,8 +79,7 @@ class saved extends Survey_Common_Action
      */
     private function _showSavedList($iSurveyId)
     {
-        $clang = $this->getController()->lang;
-        $aResults = Saved_control::model()->findAll(array(
+        $aResults = SavedControl::model()->findAll(array(
             'select' => array('scid', 'srid', 'identifier', 'ip', 'saved_date', 'email', 'access_code'),
             'condition' => 'sid=:sid',
             'order' => 'saved_date desc',

@@ -20,13 +20,13 @@
 
     <?php if ($deqrow['help'])
         { ?>
-        <img src='<?php echo Yii::app()->getConfig('imageurl'); ?>/help.gif' alt='<?php echo $blang->gT("Help about this question"); ?>' align='right' onclick="javascript:alert('Question <?php echo $deqrow['title']; ?> Help: <?php echo $hh; ?>')" />
+        <img src='<?php echo Yii::app()->getConfig('imageurl'); ?>/help.gif' alt='<?php eT("Help about this question",'html',$sDataEntryLanguage); ?>' align='right' onclick="javascript:alert('Question <?php echo $deqrow['title']; ?> Help: <?php echo $hh; ?>')" />
         <?php }
         switch($deqrow['type'])
         {
             case "5": //5 POINT CHOICE radio-buttons ?>
             <select name='<?php echo $fieldname; ?>'>
-                <option value=''><?php echo $blang->gT("No answer"); ?></option>
+                <option value=''><?php eT("No answer",'html',$sDataEntryLanguage); ?></option>
                 <?php for ($x=1; $x<=5; $x++)
                     { ?>
                     <option value='<?php echo $x; ?>'><?php echo $x; ?></option>
@@ -34,7 +34,6 @@
             </select>
             <?php break;
             case "D": //DATE
-                //                            $qidattributes = getQuestionAttributeValues($deqrow['qid'], $deqrow['type']);
                 $dateformatdetails = getDateFormatDataForQID($qidattributes, $thissurvey);
                 if(canShowDatePicker($dateformatdetails))
                 {
@@ -50,9 +49,9 @@
                 break;
             case "G":  //GENDER drop-down list ?>
             <select name='<?php echo $fieldname; ?>'>
-                <option selected='selected' value=''><?php echo $blang->gT("Please choose"); ?>..</option>
-                <option value='F'><?php echo $blang->gT("Female"); ?></option>
-                <option value='M'><?php echo $blang->gT("Male"); ?></option>
+                <option selected='selected' value=''><?php eT("Please choose",'html',$sDataEntryLanguage); ?>..</option>
+                <option value='F'><?php eT("Female",'html',$sDataEntryLanguage); ?></option>
+                <option value='M'><?php eT("Male",'html',$sDataEntryLanguage); ?></option>
             </select>
             <?php break;
             case "Q": //MULTIPLE SHORT TEXT
@@ -72,7 +71,7 @@
 
             case "1": // multi scale^ ?>
 
-            <table><tr><td></td><th><?php echo sprintf($clang->gT('Label %s'),'1').'</th><th>'.sprintf($clang->gT('Label %s'),'2'); ?></th></tr>
+            <table><tr><td></td><th><?php echo sprintf(gT('Label %s'),'1').'</th><th>'.sprintf(gT('Label %s'),'2'); ?></th></tr>
 
             <?php foreach ($dearesult as $dearow)
                 {
@@ -81,7 +80,7 @@
                     $delresult = dbExecuteAssoc($delquery); ?>
                 <tr><td><?php echo $dearow['question']; ?></td><td>
                         <select name='<?php echo $fieldname.$dearow['title']; ?>#0'>
-                            <option selected='selected' value=''><?php $clang->eT("Please choose..."); ?></option>
+                            <option selected='selected' value=''><?php eT("Please choose..."); ?></option>
                             <?php foreach ($delresult as $delrow)
                                 { ?>
                                 <option value='<?php echo $delrow['code']; ?>'><?php echo $delrow['answer']; ?></option>
@@ -91,7 +90,7 @@
                         $delresult = dbExecuteAssoc($delquery); ?>
                     <td>
                         <select name='<?php echo $fieldname.$dearow['title']; ?>#1'>
-                            <option selected='selected' value=''><?php $clang->eT("Please choose..."); ?></option>
+                            <option selected='selected' value=''><?php eT("Please choose..."); ?></option>
                             <?php foreach ($delresult as $delrow)
                                 { ?>
                                 <option value='<?php echo $delrow['code']; ?>'><?php echo $delrow['answer']; ?></option>
@@ -100,12 +99,12 @@
                 <?php }
                 if ($fother == "Y")
                 { ?>
-                <option value='-oth-'><?php $clang->eT("Other"); ?></option>
+                <option value='-oth-'><?php eT("Other"); ?></option>
                 <?php }
 
                 if ($fother == "Y")
                 {
-                    $clang->eT("Other"); ?>:
+                    eT("Other"); ?>:
                 <input type='text' name='<?php echo $fieldname; ?>other' value='' />
                 <?php } ?>
         </tr></table>
@@ -115,17 +114,17 @@
         case "!": ?>
         <select name='<?php echo $fieldname; ?>'>
             <?php if ($defexists=="") { ?>
-                <option selected='selected' value=''><?php echo $blang->gT("Please choose"); ?>..</option><?php echo $datatemp; }
+                <option selected='selected' value=''><?php eT("Please choose",'html',$sDataEntryLanguage); ?>..</option><?php echo $datatemp; }
                 else  { echo $datatemp;} ?>
 
             <?php if ($fother == "Y")
                 { ?>
-                <option value='-oth-'><?php echo $blang->gT("Other"); ?></option>
+                <option value='-oth-'><?php eT("Other",'html',$sDataEntryLanguage); ?></option>
                 <?php } ?>
         </select>
         <?php if ($fother == "Y")
             { ?>
-            <?php echo $blang->gT("Other"); ?>:
+            <?php eT("Other",'html',$sDataEntryLanguage); ?>:
             <input type='text' name='<?php echo $fieldname; ?>other' value='' />
             <?php }
             break;
@@ -133,10 +132,10 @@
         <select name='<?php echo $fieldname; ?>'>
 
             <?php if ($defexists=="") { ?>
-                <option selected='selected' value=''><?php echo $blang->gT("Please choose"); ?>..</option><?php echo $datatemp; }
+                <option selected='selected' value=''><?php eT("Please choose",'html',$sDataEntryLanguage); ?>..</option><?php echo $datatemp; }
                 else  { echo $datatemp;} ?>
         </select>
-        <br /><?php echo $blang->gT("Comment"); ?>:<br />
+        <br /><?php eT("Comment"); ?>:<br />
         <textarea cols='40' rows='5' name='<?php echo $fieldname; ?>comment'></textarea>
         <?php break;
         case "R": //RANKING TYPE QUESTION ?>
@@ -147,13 +146,13 @@
             <li class="select-item">
             <?php
                 if($i==1){
-                    echo $blang->gT('First choice');
+                    eT('First choice','html',$sDataEntryLanguage);
                 }else{
-                    echo $blang->gT('Next choice');
+                    eT('Next choice','html',$sDataEntryLanguage);
                 }
             ?>
             <select name="<?php echo $fieldname.$i ?>" id="answer<?php echo $fieldname.$i ?>">";
-                <option value=""><?php echo $blang->gT('None') ?></option>
+                <option value=""><?php eT('None','html',$sDataEntryLanguage) ?></option>
                 <?php
                     foreach ($answers as $ansrow)
                     {
@@ -179,8 +178,8 @@
         <script type='text/javascript'>
             <!--
             var aRankingTranslations = {
-                choicetitle: '<?php echo $clang->gT("Your Choices",'js') ?>',
-                ranktitle: '<?php echo $clang->gT("Your Ranking",'js') ?>'
+                choicetitle: '<?php echo gT("Your Choices",'js') ?>',
+                ranktitle: '<?php echo gT("Your Ranking",'js') ?>'
             };
             function checkconditions(){};
             $(function() {
@@ -214,7 +213,7 @@
                             }
                             if ($deqrow['other'] == "Y")
                             { ?>
-                            <?php echo $blang->gT("Other"); ?> <input type='text' name='<?php echo $fieldname; ?>other' />
+                            <?php eT("Other",'html',$sDataEntryLanguage); ?> <input type='text' name='<?php echo $fieldname; ?>other' />
                             <?php } ?>
                     </td></tr></table>
 
@@ -229,13 +228,13 @@
                 <?php }
                 if ($deqrow['other'] == "Y")
                 { ?>
-                <?php echo $blang->gT("Other"); ?> <input type='text' name='<?php echo $fieldname; ?>other' />
+                <?php eT("Other",'html',$sDataEntryLanguage); ?> <input type='text' name='<?php echo $fieldname; ?>other' />
                 <?php }
             }
             break;
         case "I": //Language Switch ?>
         <select name='<?php echo $fieldname; ?>'>
-            <option value='' selected='selected'><?php echo $blang->gT("Please choose"); ?>..</option>
+            <option value='' selected='selected'><?php eT("Please choose",'html',$sDataEntryLanguage); ?>..</option>
 
             <?php foreach ($slangs as $lang)
                 { ?>
@@ -262,7 +261,7 @@
                 if ($deqrow['other'] == "Y")
                 { ?>
                 <tr>
-                    <td  align='left'><label><?php echo $blang->gT("Other"); ?>:</label>
+                    <td  align='left'><label><?php eT("Other",'html',$sDataEntryLanguage); ?>:</label>
                         <input type='text' name='$fieldname"."other' size='10'/>
                     </td>
                     <td align='left'>
@@ -372,9 +371,9 @@
                 $acomma = "";
             } else {
                 $acomma = getRadixPointData($thissurvey['surveyls_numberformat']);
-                $acomma = $acomma['seperator'];
+                $acomma = $acomma['separator'];
             }
-            $title = $clang->gT('Only numbers may be entered in this field.');
+            $title = gT('Only numbers may be entered in this field.');
 
             echo $prefix; ?><input type='text' name='<?php echo $fieldname; ?>' size='<?php echo $tiwidth; ?>' title='<?php echo $title; ?>' <?php echo $maxlength; ?> onkeypress="return goodchars(event,'-0123456789<?php echo $acomma; ?>')" /><?php echo $suffix;
             break;
@@ -407,9 +406,9 @@
 
             if ($qidattributes['numbers_only']==1)
             {
-                $sSeperator = getRadixPointData($thissurvey['surveyls_numberformat']);
-                $sSeperator = $sSeperator['seperator'];
-                $numbersonly = 'onkeypress="return goodchars(event,\'-0123456789'.$sSeperator.'\')"';
+                $sSeparator = getRadixPointData($thissurvey['surveyls_numberformat']);
+                $sSeparator = $sSeparator['separator'];
+                $numbersonly = 'onkeypress="return goodchars(event,\'-0123456789'.$sSeparator.'\')"';
             }
             else
             {
@@ -492,9 +491,9 @@
         case "Y": //YES/NO radio-buttons
         ?>
         <select name='<?php echo $fieldname; ?>'>
-            <option selected='selected' value=''><?php echo $blang->gT("Please choose"); ?>..</option>
-            <option value='Y'><?php echo $blang->gT("Yes"); ?></option>
-            <option value='N'><?php echo $blang->gT("No"); ?></option>
+            <option selected='selected' value=''><?php eT("Please choose",'html',$sDataEntryLanguage); ?>..</option>
+            <option value='Y'><?php eT("Yes",'html',$sDataEntryLanguage); ?></option>
+            <option value='N'><?php eT("No",'html',$sDataEntryLanguage); ?></option>
         </select>
         <?php break;
         case "A": //ARRAY (5 POINT CHOICE) radio-buttons ?>
@@ -506,7 +505,7 @@
                     <td align='right'><?php echo $mearow['question']; ?></td>
                     <td>
                         <select name='<?php echo $fieldname.$mearow['title']; ?>'>
-                            <option value=''><?php echo $blang->gT("Please choose"); ?>..</option>
+                            <option value=''><?php eT("Please choose",'html',$sDataEntryLanguage); ?>..</option>
                             <?php for ($i=1; $i<=5; $i++)
                                 { ?>
                                 <option value='<?php echo $i; ?>'><?php echo $i; ?></option>
@@ -525,7 +524,7 @@
                     <td align='right'><?php echo $mearow['question']; ?></td>
                     <td>
                         <select name='<?php echo $fieldname.$mearow['title']; ?>'>
-                            <option value=''><?php echo $blang->gT("Please choose"); ?>..</option>
+                            <option value=''><?php eT("Please choose",'html',$sDataEntryLanguage); ?>..</option>
                             <?php for ($i=1; $i<=10; $i++)
                                 { ?>
                                 <option value='<?php echo $i; ?>'><?php echo $i; ?></option>
@@ -545,10 +544,10 @@
                     <td align='right'><?php echo $mearow['question']; ?></td>
                     <td>
                         <select name='<?php echo $fieldname.$mearow['title']; ?>'>
-                            <option value=''><?php echo $blang->gT("Please choose"); ?>..</option>
-                            <option value='Y'><?php echo $blang->gT("Yes"); ?></option>
-                            <option value='U'><?php echo $blang->gT("Uncertain"); ?></option>
-                            <option value='N'><?php echo $blang->gT("No"); ?></option>
+                            <option value=''><?php eT("Please choose",'html',$sDataEntryLanguage); ?>..</option>
+                            <option value='Y'><?php eT("Yes",'html',$sDataEntryLanguage); ?></option>
+                            <option value='U'><?php eT("Uncertain",'html',$sDataEntryLanguage); ?></option>
+                            <option value='N'><?php eT("No",'html',$sDataEntryLanguage); ?></option>
                         </select>
                     </td>
                 </tr>
@@ -563,10 +562,10 @@
                     <td align='right'><?php echo $mearow['question']; ?></td>
                     <td>
                         <select name='<?php echo $fieldname.$mearow['title']; ?>'>
-                            <option value=''><?php echo $blang->gT("Please choose"); ?>..</option>
-                            <option value='I'><?php echo $blang->gT("Increase"); ?></option>
-                            <option value='S'><?php echo $blang->gT("Same"); ?></option>
-                            <option value='D'><?php echo $blang->gT("Decrease"); ?></option>
+                            <option value=''><?php eT("Please choose",'html',$sDataEntryLanguage); ?>..</option>
+                            <option value='I'><?php eT("Increase",'html',$sDataEntryLanguage); ?></option>
+                            <option value='S'><?php eT("Same",'html',$sDataEntryLanguage); ?></option>
+                            <option value='D'><?php eT("Decrease",'html',$sDataEntryLanguage); ?></option>
                         </select>
                     </td>
                 </tr>
@@ -686,7 +685,7 @@
                     <td align='right'><?php echo $answerleft; ?></td>
                     <td>
                         <select name='<?php echo $fieldname.$mearow['title']; ?>'>
-                            <option value=''><?php echo $blang->gT("Please choose"); ?>..</option>
+                            <option value=''><?php eT("Please choose",'html',$sDataEntryLanguage); ?>..</option>
 
                             <?php foreach ($fresult as $frow)
                                 { ?>

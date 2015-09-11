@@ -63,18 +63,15 @@ button.ui-button::-moz-focus-inner { /* Get rid of extra padding in focused butt
 	line-height: normal;
 }
 
-button.ui-state-default,
-input.ui-state-default {
+.ui-state-default {
 	color: #2E648B;
 }
 
-button.ui-state-hover,
-input.ui-state-hover {
+.ui-state-hover {
 	color: #0070A3;
 }
 
-button.ui-state-active,
-input.ui-state-active {
+.ui-state-active {
 	color: #FFFFFF;
 }
 
@@ -106,10 +103,12 @@ button.ui-button-icons-only {
 
 .ui-button-text-icon-primary .ui-button-text {
 	padding: 0 0.7em 0 1.7em;
+	*padding: 0 20px; 
 }
 
 .ui-button-text-icon-secondary .ui-button-text {
 	padding: 0 1.7em 0 0.7em;
+	*padding: 0 20px; 
 }
 
 .ui-button-text-icons .ui-button-text {
@@ -140,17 +139,20 @@ input.ui-button {
 .ui-button-text-icons .ui-button-icon-primary,
 .ui-button-icons-only .ui-button-icon-primary {
 	left: .4em;
+	*left: 2px;
 }
 
 .ui-button-text-icon-secondary .ui-button-icon-secondary,
 .ui-button-text-icons .ui-button-icon-secondary,
 .ui-button-icons-only .ui-button-icon-secondary {
 	right: .4em;
+	*right: 2px;
 }
 
 .ui-button-text-icons .ui-button-icon-secondary,
 .ui-button-icons-only .ui-button-icon-secondary {
 	right: .4em;
+	*right: 2px;
 }
 
 /* Button sets*/
@@ -236,7 +238,7 @@ h3 {
   padding-bottom: 10px;
 }
 
-a:link,a:visited {
+a {
   color: #819d26;
   text-decoration: none;
 }
@@ -591,7 +593,9 @@ table.group {
 
 .assessments-container {
 }
-
+.assessments td{
+	text-align: center;
+}
 .completed-table {
 	margin: 0 auto;
 	width: 90%;
@@ -878,6 +882,7 @@ table.clearall-result td {
 .list-radio .answer li label,
 .list-with-comment .answer li label {
   display: inline-block;
+  *display: inline;
   width: 85%;
 }
 
@@ -892,20 +897,30 @@ table.clearall-result td {
   margin-top: 2px;
   *margin-top: -2px; /* IE7 and below */
 }
-
-ul.cols-2,table.cols-2,ul.cols-3,table.cols-3,ul.cols-4,table.cols-4,ul.cols-5,table.cols-5,ul.cols-6,table.cols-6,ul.cols-7,table.cols-7,ul.cols-8,table.cols-8
-  {
+ul.colstyle-css,table.colstyle-table
+{
   width: 98%;
   margin: 0% auto 0% auto;
 }
-
-ul.cols-2 li,ul.cols-2-ul,ul.cols-3 li,ul.cols-3-ul,ul.cols-4 li,ul.cols-4-ul,ul.cols-5 li,ul.cols-5-ul,ul.cols-6 li,ul.cols-6-ul,ul.cols-7 li,ul.cols-7-ul,ul.cols-8 li,ul.cols-8-ul
-  {
+ul.colstyle-css li,ul.colstyle-ul
+{
   float: left;
+  width: 100%;
   padding: 0;
   white-space: normal
 }
-
+/* deactivate display:inline-block for col style */
+.multiple-opt .answer ul.colstyle-css li label,.multiple-opt .answer ul.colstyle-ul li label,.multiple-opt .answer table.colstyle-table li label,
+.multiple-opt-comments .answer ul.colstyle-css li label,.multiple-opt-comments .answer ul.colstyle-ul li label,.multiple-opt-comments .answer table.colstyle-table li label
+{
+    display: inline;
+}
+.list-radio .answer ul.colstyle-css li label,.list-radio .answer ul.colstyle-ul li label,.list-radio .answer table.colstyle-table li label,
+.list-with-comment .answer ul.colstyle-css li label,.list-with-comment .answer ul.colstyle-ul li label,.list-with-comment .answer table.colstyle-table li label
+{
+    display: inline;
+}
+/* multi column width */
 ul.cols-2 li,ul.cols-2-ul,table.cols-2 td {
   width: 48%;
 }
@@ -984,6 +999,7 @@ ul.cols-8 li,ul.cols-8-ul,table.cols-8 td {
 }
 .multiple-opt .answer li label, .multiple-opt-comments .answer li .option label {
   display: inline-block;
+  *display: inline;
   width: 90%;
 }
 .multiple-opt .answer li.other-item label {
@@ -995,6 +1011,15 @@ ul.cols-8 li,ul.cols-8-ul,table.cols-8 td {
   display: table;
   padding: 0%;
   margin: 1em;
+}
+
+ul.checkbox-text-list {
+    width: 99%;
+}
+
+ul.checkbox-text-list span {
+	vertical-align: top !important;
+	width: 50%;
 }
 
 .numeric-multi .answer ul {

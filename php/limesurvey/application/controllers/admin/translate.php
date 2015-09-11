@@ -10,7 +10,6 @@
  * other free or open source software licenses.
  * See COPYRIGHT.php for copyright notices and details.
  *
- *	$Id$
  */
 /**
 * Translate Controller
@@ -37,9 +36,9 @@ class translate extends Survey_Common_Action {
             return;
         }
 
-        $this->getController()->_js_admin_includes(Yii::app()->getConfig("adminscripts") . 'translation.js');
+        App()->getClientScript()->registerScriptFile(Yii::app()->getConfig("adminscripts") . 'translation.js');
 
-        $clang = Yii::app()->lang;
+
         $baselang = Survey::model()->findByPk($iSurveyID)->language;
         $langs = Survey::model()->findByPk($iSurveyID)->additionalLanguages;
 
@@ -64,7 +63,6 @@ class translate extends Survey_Common_Action {
 			"surveyid" => $iSurveyID,
 			"survey_title" => $survey_title,
 			"tolang" => $tolang,
-			"clang" => $clang,
 			"adminmenu" => $this->showTranslateAdminmenu($iSurveyID, $survey_title, $tolang)
 		);
         $aViewUrls['translateheader_view'][] = $aData;
@@ -75,7 +73,7 @@ class translate extends Survey_Common_Action {
         if ( ! empty($tolang) )
         {
             // Only save if the administration user has the correct permission
-			if ( $actionvalue == "translateSave" && hasSurveyPermission($iSurveyID, 'translations', 'update') )
+			if ( $actionvalue == "translateSave" && Permission::model()->hasSurveyPermission($iSurveyID, 'translations', 'update') )
 			{
 				$this->_translateSave($iSurveyID, $tolang, $baselang, $tab_names);
 			}
@@ -119,8 +117,8 @@ class translate extends Survey_Common_Action {
 					{
 						$id1 = Yii::app()->getRequest()->getPost("{$type}_id1_{$i}");
 						$id2 = Yii::app()->getRequest()->getPost("{$type}_id2_{$i}");
-
-						$this->query($type, 'queryupdate', $iSurveyID, $tolang, $baselang, $id1, $id2, $new);
+                        $iScaleID = Yii::app()->getRequest()->getPost("{$type}_scaleid_{$i}");
+						$this->query($type, 'queryupdate', $iSurveyID, $tolang, $baselang, $id1, $id2, $iScaleID, $new);
 					}
 				}
 				$i++;
@@ -131,7 +129,6 @@ class translate extends Survey_Common_Action {
 	private function _displayUntranslatedFields($iSurveyID, $tolang, $baselang, $tab_names, $baselangdesc, $tolangdesc)
 	{
 		$aData['surveyid'] = $iSurveyID;
-		$aData['clang'] = Yii::app()->lang;
 		$aData['tab_names'] = $tab_names;
 		$aData['tolang'] = $tolang;
 		$aData['baselang'] = $baselang;
@@ -169,7 +166,7 @@ class translate extends Survey_Common_Action {
 			$aData['tolangdesc'] = $tolangdesc;
 			$aData['type'] = $type;
 			$aData['translateTabs'] = $this->displayTranslateFieldsHeader($baselangdesc, $tolangdesc, $type);
-			$aViewUrls['output'] .= $this->getController()->render("/admin/translate/translatetabs_view", $aData, true);
+			$aViewUrls['output'] .= $this->getController()->renderPartial("/admin/translate/translatetabs_view", $aData, true);
 			foreach ( $resultbase as $rowfrom )
 			{
 				$textfrom = htmlspecialchars_decode($rowfrom[$amTypeOptions["dbColumn"]]);
@@ -215,18 +212,18 @@ class translate extends Survey_Common_Action {
 											$amTypeOptions2, $baselangdesc, $tolangdesc, $textfrom2, $textto2, $i, $resultbase2[$i], $evenRow);
 				}
 
-				$aViewUrls['output'] .= $this->getController()->render("/admin/translate/translatefields_view", $aData, true);
+				$aViewUrls['output'] .= $this->getController()->renderPartial("/admin/translate/translatefields_view", $aData, true);
 
 				$i++;
 			} // end while
 
 			$aData['all_fields_empty'] = $all_fields_empty;
 			$aData['translateFieldsFooter'] = $this->displayTranslateFieldsFooter();
-            $aData['bReadOnly']=!hasSurveyPermission($iSurveyID, 'translations', 'update');
-			$aViewUrls['output'] .= $this->getController()->render("/admin/translate/translatefieldsfooter_view", $aData, true);
+            $aData['bReadOnly']=!Permission::model()->hasSurveyPermission($iSurveyID, 'translations', 'update');
+			$aViewUrls['output'] .= $this->getController()->renderPartial("/admin/translate/translatefieldsfooter_view", $aData, true);
 		} // end foreach
 
-		// Submit button
+		// Submit buttonrender
 		$aViewUrls['translatefooter_view'][] = $aData;
 
         return $aViewUrls;
@@ -243,21 +240,21 @@ class translate extends Survey_Common_Action {
     */
     private function showTranslateAdminmenu($iSurveyID, $survey_title, $tolang)
     {
-        $clang = Yii::app()->lang;
+
         $publicurl = Yii::app()->getConfig('publicurl');
 		$menuitem_url = "{$publicurl}/index.php?sid={$iSurveyID}&newtest=Y&lang=";
 
 		$adminmenu = "";
         $adminmenu .= CHtml::openTag('div', array('class'=>'menubar'));
         $adminmenu .= CHtml::openTag('div', array('class'=>'menubar-title ui-widget-header'));
-        $adminmenu .= CHtml::tag('strong', array(), $clang->gT("Translate survey") . ": $survey_title");
+        $adminmenu .= CHtml::tag('strong', array(), gT("Translate survey") . ": $survey_title");
         $adminmenu .= CHtml::closeTag("div");
         $adminmenu .= CHtml::openTag('div', array('class'=>'menubar-main'));
         $adminmenu .= CHtml::openTag('div', array('class'=>'menubar-left'));
 
         // Return to survey administration button
         $adminmenu .= $this->menuItem(
-							$clang->gT("Return to survey administration"),
+							gT("Return to survey administration"),
 							"Administration",
 							"home.png",
 							$this->getController()->createUrl("admin/survey/sa/view/surveyid/{$iSurveyID}/")
@@ -294,16 +291,16 @@ class translate extends Survey_Common_Action {
 		$survey_button = "";
 
         $imageurl = Yii::app()->getConfig("adminimageurl");
-        $clang = Yii::app()->lang;
+
 
         $baselang = Survey::model()->findByPk($iSurveyID)->language;
         $langs = Survey::model()->findByPk($iSurveyID)->additionalLanguages;
 
         $surveyinfo = Survey::model()->with(array('languagesettings'=>array('condition'=>'surveyls_language=language')))->findByPk($iSurveyID);
-        $surveyinfo = array_merge($surveyinfo->attributes, $surveyinfo->languagesettings[0]->attributes);
+        $surveyinfo = array_merge($surveyinfo->attributes, $surveyinfo->defaultlanguage->attributes);
 
 		$surveyinfo = array_map('flattenText', $surveyinfo);
-		$menutext = ( $surveyinfo['active'] == "N" ) ? $clang->gT("Test this survey") : $clang->gT("Execute this survey");
+		$menutext = ( $surveyinfo['active'] == "N" ) ? gT("Test this survey") : gT("Execute this survey");
 
 		if ( count($langs) == 0 )
 		{
@@ -316,7 +313,7 @@ class translate extends Survey_Common_Action {
 		}
 		else
 		{
-			$icontext = $clang->gT($menutext);
+			$icontext = gT($menutext);
 
 			$img_tag = CHtml::image($imageurl . '/do.png', $icontext);
 			$survey_button .= CHtml::link($img_tag, '#', array(
@@ -338,7 +335,7 @@ class translate extends Survey_Common_Action {
 									)
 								);
 
-			$survey_button .= $clang->gT("Please select a language:") . CHtml::openTag('ul');
+			$survey_button .= gT("Please select a language:") . CHtml::openTag('ul');
 
 			foreach ( $tmp_survlangs as $tmp_lang )
 			{
@@ -360,20 +357,19 @@ class translate extends Survey_Common_Action {
 	/*
 	* _getLanguageList() returns survey language list
 	* @param string $iSurveyID Survey id
-	* @param string @clang Language object
 	* @param string $tolang The target translation code
 	*/
 	private function _getLanguageList($iSurveyID, $tolang)
 	{
 		$language_list = "";
 
-        $clang = Yii::app()->lang;
+
 
         $langs = Survey::model()->findByPk($iSurveyID)->additionalLanguages;
         $supportedLanguages = getLanguageData(FALSE,Yii::app()->session['adminlang']);
 
 		$language_list .= CHtml::openTag('div', array('class'=>'menubar-right')); // Opens .menubar-right div
-		$language_list .= CHtml::tag('label', array('for'=>'translationlanguage'), $clang->gT("Translate to") . ":");
+		$language_list .= CHtml::tag('label', array('for'=>'translationlanguage'), gT("Translate to") . ":");
 		$language_list .= CHtml::openTag(
 							'select',
 							array(
@@ -393,7 +389,7 @@ class translate extends Survey_Common_Action {
 									'selected' => $selected,
 									'value' => $this->getController()->createUrl("admin/translate/sa/index/surveyid/{$iSurveyID}/")
 								),
-								$clang->gT("Please choose...")
+								gT("Please choose...")
 							);
         }
 
@@ -432,7 +428,7 @@ class translate extends Survey_Common_Action {
     */
     private function setupTranslateFields($type)
     {
-        $clang = Yii::app()->lang;
+
 
 		$aData = array();
 
@@ -446,7 +442,7 @@ class translate extends Survey_Common_Action {
 					'id2' => '',
 					'gid' => FALSE,
 					'qid' => FALSE,
-					'description' => $clang->gT("Survey title and description"),
+					'description' => gT("Survey title and description"),
 					'HTMLeditorType' => "title",
 					'HTMLeditorDisplay' => "Inline",
 					'associated' => "description"
@@ -461,7 +457,7 @@ class translate extends Survey_Common_Action {
 					'id2' => '',
 					'gid' => FALSE,
 					'qid' => FALSE,
-					'description' => $clang->gT("Description:"),
+					'description' => gT("Description:"),
 					'HTMLeditorType' => "description",
 					'HTMLeditorDisplay' => "Inline",
 					'associated' => ""
@@ -476,7 +472,7 @@ class translate extends Survey_Common_Action {
 					'id2' => '',
 					'gid' => FALSE,
 					'qid' => FALSE,
-					'description' => $clang->gT("Welcome and end text"),
+					'description' => gT("Welcome and end text"),
 					'HTMLeditorType' => "welcome",
 					'HTMLeditorDisplay' => "Inline",
 					'associated' => "end"
@@ -491,7 +487,7 @@ class translate extends Survey_Common_Action {
 					'id2' => '',
 					'gid' => FALSE,
 					'qid' => FALSE,
-					'description' => $clang->gT("End message:"),
+					'description' => gT("End message:"),
 					'HTMLeditorType' => "end",
 					'HTMLeditorDisplay' => "Inline",
 					'associated' => ""
@@ -506,7 +502,7 @@ class translate extends Survey_Common_Action {
 					'id2' => '',
 					'gid' => TRUE,
 					'qid' => FALSE,
-					'description' => $clang->gT("Question groups"),
+					'description' => gT("Question groups"),
 					'HTMLeditorType' => "group",
 					'HTMLeditorDisplay' => "Popup",
 					'associated' => "group_desc"
@@ -521,7 +517,7 @@ class translate extends Survey_Common_Action {
 					'id2' => '',
 					'gid' => TRUE,
 					'qid' => FALSE,
-					'description' => $clang->gT("Group description"),
+					'description' => gT("Group description"),
 					'HTMLeditorType' => "group_desc",
 					'HTMLeditorDisplay' => "Popup",
 					'associated' => ""
@@ -536,7 +532,7 @@ class translate extends Survey_Common_Action {
 					'id2' => '',
 					'gid' => TRUE,
 					'qid' => TRUE,
-					'description' => $clang->gT("Questions"),
+					'description' => gT("Questions"),
 					'HTMLeditorType' => "question",
 					'HTMLeditorDisplay' => "Popup",
 					'associated' => "question_help"
@@ -551,7 +547,7 @@ class translate extends Survey_Common_Action {
 					'id2' => '',
 					'gid' => TRUE,
 					'qid' => TRUE,
-					'description' => $clang->gT("Question help"),
+					'description' => gT("Question help"),
 					'HTMLeditorType' => "question_help",
 					'HTMLeditorDisplay' => "Popup",
 					'associated' => ""
@@ -566,7 +562,7 @@ class translate extends Survey_Common_Action {
 					'id2' => '',
 					'gid' => TRUE,
 					'qid' => TRUE,
-					'description' => $clang->gT("Subquestions"),
+					'description' => gT("Subquestions"),
 					'HTMLeditorType' => "question",
 					'HTMLeditorDisplay' => "Popup",
 					'associated' => ""
@@ -579,9 +575,10 @@ class translate extends Survey_Common_Action {
 					'dbColumn' => 'answer',
 					'id1' => 'qid',
 					'id2' => 'code',
+                    'scaleid' => 'scale_id',
 					'gid' => FALSE,
 					'qid' => TRUE,
-					'description' => $clang->gT("Answer options"),
+					'description' => gT("Answer options"),
 					'HTMLeditorType' => "subquestion",
 					'HTMLeditorDisplay' => "Popup",
 					'associated' => ""
@@ -596,7 +593,7 @@ class translate extends Survey_Common_Action {
 					'id2' => '',
 					'gid' => FALSE,
 					'qid' => FALSE,
-					'description' => $clang->gT("Invitation email subject"),
+					'description' => gT("Invitation email subject"),
 					'HTMLeditorType' => "email",
 					'HTMLeditorDisplay' => "Popup",
 					'associated' => "emailinvitebody"
@@ -611,7 +608,7 @@ class translate extends Survey_Common_Action {
 					'id2' => '',
 					'gid' => FALSE,
 					'qid' => FALSE,
-					'description' => $clang->gT("Invitation email"),
+					'description' => gT("Invitation email"),
 					'HTMLeditorType' => "email",
 					'HTMLeditorDisplay' => "",
 					'associated' => ""
@@ -626,7 +623,7 @@ class translate extends Survey_Common_Action {
 					'id2' => '',
 					'gid' => FALSE,
 					'qid' => FALSE,
-					'description' => $clang->gT("Reminder email subject"),
+					'description' => gT("Reminder email subject"),
 					'HTMLeditorType' => "email",
 					'HTMLeditorDisplay' => "",
 					'associated' => "emailreminderbody"
@@ -641,7 +638,7 @@ class translate extends Survey_Common_Action {
 					'id2' => '',
 					'gid' => FALSE,
 					'qid' => FALSE,
-					'description' => $clang->gT("Reminder email"),
+					'description' => gT("Reminder email"),
 					'HTMLeditorType' => "email",
 					'HTMLeditorDisplay' => "",
 					'associated' => ""
@@ -656,7 +653,7 @@ class translate extends Survey_Common_Action {
 					'id2' => '',
 					'gid' => FALSE,
 					'qid' => FALSE,
-					'description' => $clang->gT("Confirmation email subject"),
+					'description' => gT("Confirmation email subject"),
 					'HTMLeditorType' => "email",
 					'HTMLeditorDisplay' => "",
 					'associated' => "emailconfirmationbody"
@@ -671,7 +668,7 @@ class translate extends Survey_Common_Action {
 					'id2' => '',
 					'gid' => FALSE,
 					'qid' => FALSE,
-					'description' => $clang->gT("Confirmation email"),
+					'description' => gT("Confirmation email"),
 					'HTMLeditorType' => "email",
 					'HTMLeditorDisplay' => "",
 					'associated' => ""
@@ -686,7 +683,7 @@ class translate extends Survey_Common_Action {
 					'id2' => '',
 					'gid' => FALSE,
 					'qid' => FALSE,
-					'description' => $clang->gT("Registration email subject"),
+					'description' => gT("Registration email subject"),
 					'HTMLeditorType' => "email",
 					'HTMLeditorDisplay' => "",
 					'associated' => "emailregistrationbody"
@@ -701,7 +698,7 @@ class translate extends Survey_Common_Action {
 					'id2' => '',
 					'gid' => FALSE,
 					'qid' => FALSE,
-                    'description' => $clang->gT("Registration email"),
+                    'description' => gT("Registration email"),
 					'HTMLeditorType' => "email",
 					'HTMLeditorDisplay' => "",
 					'associated' => ""
@@ -716,7 +713,7 @@ class translate extends Survey_Common_Action {
 					'id2' => '',
 					'gid' => FALSE,
 					'qid' => FALSE,
-					'description' => $clang->gT("Confirmation email subject"),
+					'description' => gT("Confirmation email subject"),
 					'HTMLeditorType' => "email",
 					'HTMLeditorDisplay' => "",
 					'associated' => "email_confirmbody"
@@ -731,7 +728,7 @@ class translate extends Survey_Common_Action {
 					'id2' => '',
 					'gid' => FALSE,
 					'qid' => FALSE,
-                    'description' => $clang->gT("Confirmation email"),
+                    'description' => gT("Confirmation email"),
 					'HTMLeditorType' => "email",
 					'HTMLeditorDisplay' => "",
 					'associated' => ""
@@ -741,7 +738,7 @@ class translate extends Survey_Common_Action {
         return $aData;
     }
 
-	private function query($type, $action, $iSurveyID, $tolang, $baselang, $id1 = "", $id2 = "", $new = "")
+	private function query($type, $action, $iSurveyID, $tolang, $baselang, $id1 = "", $id2 = "", $iScaleID="", $new = "")
 	{
 		$amTypeOptions = array();
         switch ($action)
@@ -765,62 +762,61 @@ class translate extends Survey_Common_Action {
                     case 'emailregistrationbody':
                     case 'email_confirm':
                     case 'email_confirmbody':
-                        return Surveys_languagesettings::model()->findAllByPk(array('surveyls_survey_id'=>$iSurveyID, 'surveyls_language'=>$baselang));
+                        return SurveyLanguageSetting::model()->findAllByPk(array('surveyls_survey_id'=>$iSurveyID, 'surveyls_language'=>$baselang));
                     case 'group':
                     case 'group_desc':
-                        return Groups::model()->findAllByAttributes(array('sid'=>$iSurveyID, 'language'=>$baselang), array('order' => 'gid'));
+                        return QuestionGroup::model()->findAllByAttributes(array('sid'=>$iSurveyID, 'language'=>$baselang), array('order' => 'gid'));
                     case 'question':
                     case 'question_help':
-                        return Questions::model()->with('parents', 'groups')->findAllByAttributes(array('sid' => $iSurveyID,'language' => $baselang,'parent_qid' => 0), array('order' => 'groups.group_order, t.question_order, t.scale_id'));
+                        return Question::model()->with('parents', 'groups')->findAllByAttributes(array('sid' => $iSurveyID,'language' => $baselang,'parent_qid' => 0), array('order' => 'groups.group_order, t.question_order, t.scale_id'));
                     case 'subquestion':
-                        return Questions::model()->with('parents', 'groups')->findAllByAttributes(array('sid' => $iSurveyID,'language' => $baselang), array('order' => 'groups.group_order, parents.question_order, t.scale_id, t.question_order', 'condition'=>'parents.language=:baselang1 AND groups.language=:baselang2 AND t.parent_qid>0', 'params'=>array(':baselang1'=>$baselang,':baselang2'=>$baselang)));
+                        return Question::model()->with('parents', 'groups')->findAllByAttributes(array('sid' => $iSurveyID,'language' => $baselang), array('order' => 'groups.group_order, parents.question_order, t.scale_id, t.question_order', 'condition'=>'parents.language=:baselang1 AND groups.language=:baselang2 AND t.parent_qid>0', 'params'=>array(':baselang1'=>$baselang,':baselang2'=>$baselang)));
                     case 'answer':
-                        return Answers::model()->with('questions', 'groups')->findAllByAttributes(array('language' => $baselang), array('order' => 'groups.group_order, questions.question_order, t.scale_id, t.sortorder', 'condition'=>'questions.sid=:sid AND questions.language=:baselang1 AND groups.language=:baselang2', 'params'=>array(':baselang1'=>$baselang, ':baselang2'=>$baselang, ':sid' => $iSurveyID)));
+                        return Answer::model()->with('questions', 'groups')->findAllByAttributes(array('language' => $baselang), array('order' => 'groups.group_order, questions.question_order, t.scale_id, t.sortorder', 'condition'=>'questions.sid=:sid AND questions.language=:baselang1 AND groups.language=:baselang2', 'params'=>array(':baselang1'=>$baselang, ':baselang2'=>$baselang, ':sid' => $iSurveyID)));
                 }
             case "queryupdate":
                 switch ( $type )
                 {
                     case 'title':
-                        return Surveys_languagesettings::model()->updateByPk(array('surveyls_survey_id'=>$iSurveyID,'surveyls_language'=>$tolang),array('surveyls_title'=>$new));
+                        return SurveyLanguageSetting::model()->updateByPk(array('surveyls_survey_id'=>$iSurveyID,'surveyls_language'=>$tolang),array('surveyls_title'=>$new));
                     case 'description':
-                        return Surveys_languagesettings::model()->updateByPk(array('surveyls_survey_id'=>$iSurveyID,'surveyls_language'=>$tolang),array('surveyls_description'=>$new));
+                        return SurveyLanguageSetting::model()->updateByPk(array('surveyls_survey_id'=>$iSurveyID,'surveyls_language'=>$tolang),array('surveyls_description'=>$new));
                     case 'welcome':
-                        return Surveys_languagesettings::model()->updateByPk(array('surveyls_survey_id'=>$iSurveyID,'surveyls_language'=>$tolang),array('surveyls_welcometext'=>$new));
+                        return SurveyLanguageSetting::model()->updateByPk(array('surveyls_survey_id'=>$iSurveyID,'surveyls_language'=>$tolang),array('surveyls_welcometext'=>$new));
                     case 'end':
-                        return Surveys_languagesettings::model()->updateByPk(array('surveyls_survey_id'=>$iSurveyID,'surveyls_language'=>$tolang),array('surveyls_endtext'=>$new));
+                        return SurveyLanguageSetting::model()->updateByPk(array('surveyls_survey_id'=>$iSurveyID,'surveyls_language'=>$tolang),array('surveyls_endtext'=>$new));
                     case 'emailinvite':
-                        return Surveys_languagesettings::model()->updateByPk(array('surveyls_survey_id'=>$iSurveyID,'surveyls_language'=>$tolang),array('surveyls_email_invite_subj'=>$new));
+                        return SurveyLanguageSetting::model()->updateByPk(array('surveyls_survey_id'=>$iSurveyID,'surveyls_language'=>$tolang),array('surveyls_email_invite_subj'=>$new));
                     case 'emailinvitebody':
-                        return Surveys_languagesettings::model()->updateByPk(array('surveyls_survey_id'=>$iSurveyID,'surveyls_language'=>$tolang),array('surveyls_email_invite'=>$new));
+                        return SurveyLanguageSetting::model()->updateByPk(array('surveyls_survey_id'=>$iSurveyID,'surveyls_language'=>$tolang),array('surveyls_email_invite'=>$new));
                     case 'emailreminder':
-                        return Surveys_languagesettings::model()->updateByPk(array('surveyls_survey_id'=>$iSurveyID,'surveyls_language'=>$tolang),array('surveyls_email_remind_subj'=>$new));
+                        return SurveyLanguageSetting::model()->updateByPk(array('surveyls_survey_id'=>$iSurveyID,'surveyls_language'=>$tolang),array('surveyls_email_remind_subj'=>$new));
                     case 'emailreminderbody':
-                        return Surveys_languagesettings::model()->updateByPk(array('surveyls_survey_id'=>$iSurveyID,'surveyls_language'=>$tolang),array('surveyls_email_remind'=>$new));
+                        return SurveyLanguageSetting::model()->updateByPk(array('surveyls_survey_id'=>$iSurveyID,'surveyls_language'=>$tolang),array('surveyls_email_remind'=>$new));
                     case 'emailconfirmation':
-                        return Surveys_languagesettings::model()->updateByPk(array('surveyls_survey_id'=>$iSurveyID,'surveyls_language'=>$tolang),array('surveyls_email_confirm_subj'=>$new));
+                        return SurveyLanguageSetting::model()->updateByPk(array('surveyls_survey_id'=>$iSurveyID,'surveyls_language'=>$tolang),array('surveyls_email_confirm_subj'=>$new));
                     case 'emailconfirmationbody':
-                        return Surveys_languagesettings::model()->updateByPk(array('surveyls_survey_id'=>$iSurveyID,'surveyls_language'=>$tolang),array('surveyls_email_confirm'=>$new));
+                        return SurveyLanguageSetting::model()->updateByPk(array('surveyls_survey_id'=>$iSurveyID,'surveyls_language'=>$tolang),array('surveyls_email_confirm'=>$new));
                     case 'emailregistration':
-                        return Surveys_languagesettings::model()->updateByPk(array('surveyls_survey_id'=>$iSurveyID,'surveyls_language'=>$tolang),array('surveyls_email_register_subj'=>$new));
+                        return SurveyLanguageSetting::model()->updateByPk(array('surveyls_survey_id'=>$iSurveyID,'surveyls_language'=>$tolang),array('surveyls_email_register_subj'=>$new));
                     case 'emailregistrationbody':
-                        return Surveys_languagesettings::model()->updateByPk(array('surveyls_survey_id'=>$iSurveyID,'surveyls_language'=>$tolang),array('surveyls_email_register'=>$new));
+                        return SurveyLanguageSetting::model()->updateByPk(array('surveyls_survey_id'=>$iSurveyID,'surveyls_language'=>$tolang),array('surveyls_email_register'=>$new));
                     case 'email_confirm':
-                        return Surveys_languagesettings::model()->updateByPk(array('surveyls_survey_id'=>$iSurveyID,'surveyls_language'=>$tolang),array('surveyls_email_confirm_subject'=>$new));
+                        return SurveyLanguageSetting::model()->updateByPk(array('surveyls_survey_id'=>$iSurveyID,'surveyls_language'=>$tolang),array('surveyls_email_confirm_subject'=>$new));
                     case 'email_confirmbody':
-                        return Surveys_languagesettings::model()->updateByPk(array('surveyls_survey_id'=>$iSurveyID,'surveyls_language'=>$tolang),array('surveyls_email_confirm'=>$new));
+                        return SurveyLanguageSetting::model()->updateByPk(array('surveyls_survey_id'=>$iSurveyID,'surveyls_language'=>$tolang),array('surveyls_email_confirm'=>$new));
                     case 'group':
-                        return Groups::model()->updateByPk(array('gid'=>$id1, 'language'=>$tolang),array('group_name' => $new), 'sid=:sid', array(':sid'=>$iSurveyID));
+                        return QuestionGroup::model()->updateByPk(array('gid'=>$id1, 'language'=>$tolang),array('group_name' => $new), 'sid=:sid', array(':sid'=>$iSurveyID));
                     case 'group_desc':
-                        return Groups::model()->updateByPk(array('gid'=>$id1, 'language'=>$tolang),array('description' => $new), 'sid=:sid', array(':sid'=>$iSurveyID));
+                        return QuestionGroup::model()->updateByPk(array('gid'=>$id1, 'language'=>$tolang),array('description' => $new), 'sid=:sid', array(':sid'=>$iSurveyID));
                     case 'question':
-                        return Questions::model()->updateByPk(array('qid'=>$id1, 'language'=>$tolang),array('question' => $new), 'sid=:sid AND parent_qid=0', array(':sid'=>$iSurveyID));
+                        return Question::model()->updateByPk(array('qid'=>$id1, 'language'=>$tolang),array('question' => $new), 'sid=:sid AND parent_qid=0', array(':sid'=>$iSurveyID));
                     case 'question_help':
-                        return Questions::model()->updateByPk(array('qid'=>$id1, 'language'=>$tolang),array('help' => $new), 'sid=:sid AND parent_qid=0', array(':sid'=>$iSurveyID));
+                        return Question::model()->updateByPk(array('qid'=>$id1, 'language'=>$tolang),array('help' => $new), 'sid=:sid AND parent_qid=0', array(':sid'=>$iSurveyID));
                     case 'subquestion':
-                        return Questions::model()->updateByPk(array('qid'=>$id1, 'language'=>$tolang),array('question' => $new), 'sid=:sid', array(':sid'=>$iSurveyID));
+                        return Question::model()->updateByPk(array('qid'=>$id1, 'language'=>$tolang),array('question' => $new), 'sid=:sid', array(':sid'=>$iSurveyID));
                     case 'answer':
-                        return Answers::model()->updateByPk(array('qid'=>$id1, 'code'=>$id2, 'language'=>$tolang, 'scale_id'=>0),array('answer' => $new));
-                        // @todo: FIXME for dual scale answer options
+                        return Answer::model()->updateByPk(array('qid'=>$id1, 'code'=>$id2, 'language'=>$tolang, 'scale_id'=>$iScaleID),array('answer' => $new));
                 }
 
         }
@@ -834,7 +830,7 @@ class translate extends Survey_Common_Action {
     */
     private function displayTranslateFieldsHeader($baselangdesc, $tolangdesc, $type)
     {
-        $clang = Yii::app()->lang;
+
 		$translateoutput = "";
         $translateoutput .= CHtml::openTag('table', array('class'=>'translate'));
         $translateoutput .= CHtml::openTag('tr');
@@ -846,7 +842,7 @@ class translate extends Survey_Common_Action {
 		$translateoutput .= '<colgroup valign="top" width="55%" />';
         if ($type=='question' || $type=='subquestion' || $type=='question_help' || $type=='answer')
         {
-            $translateoutput .= CHtml::tag('th', array(), CHtml::tag('b', array(), $clang->gT('Question code / ID')));
+            $translateoutput .= CHtml::tag('th', array(), CHtml::tag('b', array(), gT('Question code / ID')));
         }
         $translateoutput .= CHtml::tag('th', array(), CHtml::tag('b', array(), $baselangdesc));
         $translateoutput .= CHtml::tag('th', array(), CHtml::tag('b', array(), $tolangdesc));
@@ -879,6 +875,7 @@ class translate extends Survey_Common_Action {
 
         $value1 = ( ! empty($amTypeOptions["id1"]) ) ? $rowfrom[$amTypeOptions["id1"]] : "";
         $value2 = ( ! empty($amTypeOptions["id2"]) ) ? $rowfrom[$amTypeOptions["id2"]] : "";
+        $iScaleID = ( ! empty($amTypeOptions["scaleid"]) ) ? $rowfrom[$amTypeOptions["scaleid"]] : "";
 
         // Display text in original language
         // Display text in foreign language. Save a copy in type_oldvalue_i to identify changes before db update
@@ -909,6 +906,7 @@ class translate extends Survey_Common_Action {
         $translateoutput .= CHtml::openTag('td');
 		$translateoutput .= CHtml::hiddenField("{$type}_id1_{$i}", $value1);
 		$translateoutput .= CHtml::hiddenField("{$type}_id2_{$i}", $value2);
+        if ($iScaleID!='') $translateoutput .= CHtml::hiddenField("{$type}_scaleid_{$i}", $iScaleID);
 
         $nrows = max($this->calc_nrows($textfrom), $this->calc_nrows($textto));
 
@@ -1016,29 +1014,35 @@ class translate extends Survey_Common_Action {
         return $image;
     }
 
+    public function ajaxtranslategoogleapi()
+    {
+        // Ensure YII_CSRF_TOKEN, we are in admin, then only user with admin rigth can post
+        if(Yii::app()->request->isPostRequest)
+        {
+            echo self::translate_google_api();
+        }
+    }
     /*
     * translate_google_api.php
     * Creates a JSON interface for the auto-translate feature
     */
     private function translate_google_api()
     {
-        header('Content-type: application/json');
-
         $sBaselang   = Yii::app()->getRequest()->getPost('baselang');
         $sTolang     = Yii::app()->getRequest()->getPost('tolang');
         $sToconvert  = Yii::app()->getRequest()->getPost('text');
 
-        $aSearch     = array('zh-Hans','zh-Hant-HK','zh-Hant-TW',
-						'nl-informal','de-informal','it-formal','pt-BR','es-MX','nb','nn');
+        $aSearch     = array('zh-Hans','zh-Hant-HK','zh-Hant-TW','nl-informal','de-informal','it-formal','pt-BR','es-MX','nb','nn');
         $aReplace    = array('zh-CN','zh-TW','zh-TW','nl','de','it','pt','es','no','no');
-
+        $sBaselang = str_replace($aSearch, $aReplace, $sBaselang);
         $sTolang = str_replace($aSearch, $aReplace, $sTolang);
 
-		$error = FALSE;
+        $error = false;
+
         try
-		{
-            Yii::app()->loadLibrary('admin/gtranslate/GTranslate');
-			$gtranslate = new Gtranslate();
+        {
+            require_once(APPPATH.'/third_party/gtranslate-api/GTranslate.php');
+            $gtranslate = new Gtranslate();
             $objGt = $gtranslate;
 
             // Gtranslate requires you to run function named XXLANG_to_XXLANG
@@ -1077,7 +1081,9 @@ class translate extends Survey_Common_Action {
 			'converted' =>  $sOutput
 		);
 
-        return ls_json_encode($aOutput) . "\n";
+        header('Content-type: application/json');
+        return ls_json_encode($aOutput);
+        Yii::app()->end();
     }
 
     /**

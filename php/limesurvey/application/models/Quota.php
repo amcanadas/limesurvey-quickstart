@@ -1,7 +1,7 @@
 <?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 /*
    * LimeSurvey
-   * Copyright (C) 2007 The LimeSurvey Project Team / Carsten Schmitz
+   * Copyright (C) 2013 The LimeSurvey Project Team / Carsten Schmitz
    * All rights reserved.
    * License: GNU/GPL License v2 or later, see LICENSE.php
    * LimeSurvey is free software. This version may have been modified pursuant
@@ -10,11 +10,10 @@
    * other free or open source software licenses.
    * See COPYRIGHT.php for copyright notices and details.
    *
-   *	$Id$
-   *	Files Purpose: lots of common functions
+     *	Files Purpose: lots of common functions
 */
 
-class Quota extends CActiveRecord
+class Quota extends LSActiveRecord
 {
 	/**
 	 * Returns the static model of Settings table
@@ -59,20 +58,45 @@ class Quota extends CActiveRecord
 	 */
 	public function relations()
 	{
+		$alias = $this->getTableAlias();
 		return array(
-			'languagesettings' => array(self::HAS_MANY, 'Quota_languagesettings', '',
-				'on' => 't.id = languagesettings.quotals_quota_id'),
+			'languagesettings' => array(self::HAS_MANY, 'QuotaLanguageSetting', '',
+				'on' => "$alias.id = languagesettings.quotals_quota_id"),
 		);
 	}
 
-	function insertRecords($data)
+    /**
+    * Returns this model's validation rules
+    *
+    */
+    public function rules()
     {
-        $quota = new self;
-		foreach ($data as $k => $v)
-			$quota->$k = $v;
-		return $quota->save();
+        return array(
+            array('name','LSYii_Validators'),// Maybe more restrictive 
+            array('qlimit', 'numerical', 'integerOnly'=>true, 'min'=>'0', 'allowEmpty'=>true), 
+            array('action', 'numerical', 'integerOnly'=>true, 'min'=>'1', 'max'=>'2', 'allowEmpty'=>true), // Default is null ?
+            array('active', 'numerical', 'integerOnly'=>true, 'min'=>'0', 'max'=>'1', 'allowEmpty'=>true), 
+            array('autoload_url', 'numerical', 'integerOnly'=>true, 'min'=>'0', 'max'=>'1', 'allowEmpty'=>true), 
+        );
     }
 
+    function insertRecords($data)
+    {
+        $quota = new self;
+        foreach ($data as $k => $v){
+            $quota->$k = $v;
+            }
+        try
+        {
+            $quota->save();
+            return $quota->id;
+        }
+        catch(Exception $e)
+        {
+            return false;
+        }
+    }
+    
     function deleteQuota($condition = false, $recursive = true)
     {
         if ($recursive == true)
@@ -80,8 +104,8 @@ class Quota extends CActiveRecord
             $oResult = Quota::model()->findAllByAttributes($condition);
             foreach ($oResult as $aRow)
             {
-                Quota_languagesettings::model()->deleteAllByAttributes(array('quotals_quota_id' => $aRow['id']));
-                Quota_members::model()->deleteAllByAttributes(array('quota_id' => $aRow['id']));
+                QuotaLanguageSetting::model()->deleteAllByAttributes(array('quotals_quota_id' => $aRow['id']));
+                QuotaMember::model()->deleteAllByAttributes(array('quota_id' => $aRow['id']));
             }
         }
 

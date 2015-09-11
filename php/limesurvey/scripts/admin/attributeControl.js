@@ -7,8 +7,12 @@ $(document).ready(function() {
     ];
 
     $("#flashinfo").css("opacity", 0); //Make sure the flash message doesn't display in IE
+    
+    // Set some custom messages
+    $.jgrid.edit.msg.required = sRequired;
 
-    jQuery("#attributeControl").jqGrid({
+    $("#attributeControl").jqGrid({
+        direction: $('html').attr('dir'),
         loadtext : sLoadText,
         align:"center",
         url: attributeInfoUrl,
@@ -30,11 +34,23 @@ $(document).ready(function() {
         pager: "#pager",
         pgtext: pagerMsg,
         emptyrecords: emptyRecordsTxt,
+		gridComplete: function() {
+			// Disable "Add" button if more than 59 attributes
+			if($('#attributeControl').jqGrid('getGridParam', 'records') > 59) {
+				var newCell = $('#add_attributeControl').clone();
+				$('#add_attributeControl').hide().before(newCell);
+				$('#add_attributeControl:eq(0)').attr('id', 'add_attributeControl_new').attr('title', addDisabledCaption);
+				$('#add_attributeControl_new .ui-icon').addClass('ui-state-disabled');
+			}
+			else {
+				$('#add_attributeControl').show();
+				$('#add_attributeControl_new').remove();
+			}
+		},
         recordtext: viewRecordTxt
     });
 
-    jQuery.extend($.fn.fmatter , {
-        rowactions : function(rid,gid,act, pos) {
+    $.extend($.fn.fmatter.rowactions = function(act) {
             var delOptions = {
                 bCancel: sCancel,
                 bSubmit: sDeleteButtonCaption,                
@@ -43,6 +59,9 @@ $(document).ready(function() {
                 reloadAfterSubmit: true,
                 width: 400
             };
+            var $tr = $(this).closest("tr.jqgrow");
+            rid = $tr.attr("id");
+            gid = $(this).closest("table.ui-jqgrid-btable").attr('id').replace(/_frozen([^_]*)$/,'$1');
             switch(act)
             {
                 case 'edit' :
@@ -53,9 +72,9 @@ $(document).ready(function() {
                     break;
             }
         }
-    });
+    );
 
-    jQuery('#attributeControl').jqGrid('navGrid', '#pager',
+    $('#attributeControl').jqGrid('navGrid', '#pager',
         { add:true,
             edit:false,
             del:true,
@@ -67,7 +86,7 @@ $(document).ready(function() {
             searchtitle: searchMsg,
             refreshtitle: refreshMsg},
         {
-            edittitle: sEditAttributeMsg
+            edittitle: sEditAttributeMsg,
         }, //Default settings for edit
         { addCaption: addCaption,
             bCancel: sCancel,
@@ -118,7 +137,7 @@ $(document).ready(function() {
 function checkboxFormatter(cellvalue, options) {
     cellvalue = cellvalue + "";
     var bchk = cellvalue.toLowerCase() == 'true' ? " checked=\"checked\"" : "";
-    return "<input type='checkbox' name='visible_"+options.rowId+"' id='visible_"+options.rowId+"' onclick=\"ajaxSave('" + options.rowId + "');\" " + bchk + " value='" + cellvalue + "' />"
+    return "<input type='checkbox' name='visible_"+options.rowId+"' id='visible_"+options.rowId+"' onclick=\"ajaxSave('" + options.rowId + "');\" " + bchk + " value='" + cellvalue + "' />";
 }
 
 function ajaxSave(rowid) {

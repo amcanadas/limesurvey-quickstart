@@ -1,6 +1,6 @@
 /*** Start jQuery UI Theme Styles ***/
 
-button.ui-button::-moz-focus-inner {
+.ui-button::-moz-focus-inner {
 	border: 0; 
 	padding: 0;   /* Get rid of extra padding in focused button in FF */
 }
@@ -15,20 +15,17 @@ button.ui-button::-moz-focus-inner {
 	line-height: normal;
 }
 
-button.ui-state-default,
-input.ui-state-default {  
+.ui-state-default{  
 	color: #333333; 
 	border: 1px solid #A0A0A0;
 }
 
-button.ui-state-hover,
-input.ui-state-hover {  
+.ui-state-hover {  
 	color: #212121; 
 	border: 1px solid #999999;
 }
 
-button.ui-state-active,
-input.ui-state-active {  
+.ui-state-active {  
 	color: #212121; 
 	border: 1px solid #AAAAAA; 
 }
@@ -60,11 +57,13 @@ button.ui-button-icons-only {
 }
 
 .ui-button-text-icon-primary .ui-button-text {
-	padding: 0 0.7em 0 1.7em; 
+	padding: 0 0.7em 0 1.7em;
+	*padding: 0 20px;
 }
 
 .ui-button-text-icon-secondary .ui-button-text {
-	padding: 0 1.7em 0 0.7em; 
+	padding: 0 1.7em 0 0.7em;
+	*padding: 0 20px;
 }
 
 .ui-button-text-icons .ui-button-text {
@@ -94,18 +93,21 @@ input.ui-button {
 .ui-button-text-icon-primary .ui-button-icon-primary, 
 .ui-button-text-icons .ui-button-icon-primary, 
 .ui-button-icons-only .ui-button-icon-primary {
-	left: .4em; 
+	left: .4em;
+	*left: 2px;
 }
 
 .ui-button-text-icon-secondary .ui-button-icon-secondary, 
 .ui-button-text-icons .ui-button-icon-secondary, 
 .ui-button-icons-only .ui-button-icon-secondary {
-	right: .4em; 
+	right: .4em;
+	*right: 2px;
 }
 
 .ui-button-text-icons .ui-button-icon-secondary, 
 .ui-button-icons-only .ui-button-icon-secondary {
-	right: .4em; 
+	right: .4em;
+	*right: 2px;
 }
 
 /* Button sets*/
@@ -280,6 +282,10 @@ table,img {
   background-color: #fff;
 }
 
+.numeric-multi .array1 {
+  background-color: #FFFFFF;
+}
+
 .alert{
     display:block;
     }
@@ -311,7 +317,9 @@ table.question tr.array1:hover,table.question tr.array2:hover {
 
 .assessments-container {
 }
-
+.assessments td{
+	text-align: center;
+}
 .clearall-result {
 	font-size: small;
 	font-family:Arial, Helvetica, sans-serif;
@@ -612,7 +620,13 @@ table.question tr.array1:hover,table.question tr.array2:hover {
 .list-radio .answer li label,
 .list-with-comment .answer li label {
   display: inline-block;
+  *display:inline;
   width: 85%;
+}
+
+.list-radio .answer ul.colstyle-css li label, .list-radio .answer ul.colstyle-ul li label, .list-radio .answer table.colstyle-table li label, 
+.list-with-comment .answer ul.colstyle-css li label, .list-with-comment .answer ul.colstyle-ul li label, .list-with-comment .answer table.colstyle-table li label {
+    display: inline;
 }
 .list-radio .answer li.other-item label,
 .list-with-comment .answer li.other-item label {
@@ -723,7 +737,12 @@ ul.cols-8 li,ul.cols-8-ul,table.cols-8 td {
 
 .multiple-opt .answer li label, .multiple-opt-comments .answer li .option label {
   display: inline-block;
+  *display:inline;
   width: 85%;
+}
+.multiple-opt .answer ul.colstyle-css li label, .multiple-opt .answer ul.colstyle-ul li label, .multiple-opt .answer table.colstyle-table li label,
+.multiple-opt-comments .answer ul.colstyle-css li label, .multiple-opt-comments .answer ul.colstyle-ul li label, .multiple-opt-comments .answer table.colstyle-table li label {
+    display: inline;
 }
 .multiple-opt .answer li.other-item label, .multiple-opt-comments .answer li.other-item .option label {
   width: auto;
@@ -739,6 +758,10 @@ ul.cols-8 li,ul.cols-8-ul,table.cols-8 td {
   display: table;
   padding: 0%;
   margin: 1em;
+}
+
+ul.checkbox-text-list {
+    width: 99%;
 }
 
 .numeric-multi ul {
@@ -757,6 +780,11 @@ ul.cols-8 li,ul.cols-8-ul,table.cols-8 td {
 .multiple-opt-comments ul li,.multiple-short-txt ul li,.numeric-multi ul li
   {
   display: table-row;
+}
+
+ul.checkbox-text-list span {
+	vertical-align: top !important;
+	width: 50%;
 }
 
 .multiple-opt-comments ul li span.option {
@@ -1120,6 +1148,7 @@ div.questionTitle {
   width: 3em;
   text-align: right;
   display: inline-block;
+  *display:inline;
   padding: 0 0.5em 0 0;
 }
 

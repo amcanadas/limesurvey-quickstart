@@ -2,7 +2,7 @@
 
 /*** Start jQuery UI Theme Styles ***/
 
-button.ui-button::-moz-focus-inner {
+.ui-button::-moz-focus-inner {
 	border: 0; 
 	padding: 0;   /* Get rid of extra padding in focused button in FF */
 }
@@ -17,20 +17,17 @@ button.ui-button::-moz-focus-inner {
 	line-height: normal;
 }
 
-button.ui-state-default,
-input.ui-state-default {  
+.ui-state-default {
 	color: #333333; 
 	border: 1px solid #A0A0A0;
 }
 
-button.ui-state-hover,
-input.ui-state-hover {  
+.ui-state-hover {
 	color: #212121; 
 	border: 1px solid #999999;
 }
 
-button.ui-state-active,
-input.ui-state-active {  
+.ui-state-active {
 	color: #212121; 
 	border: 1px solid #AAAAAA; 
 }
@@ -63,10 +60,12 @@ button.ui-button-icons-only {
 
 .ui-button-text-icon-primary .ui-button-text {
 	padding: 0 0.7em 0 1.7em; 
+	*padding: 0 20px; 
 }
 
 .ui-button-text-icon-secondary .ui-button-text {
 	padding: 0 1.7em 0 0.7em; 
+	*padding: 0 20px; 
 }
 
 .ui-button-text-icons .ui-button-text {
@@ -97,17 +96,20 @@ input.ui-button {
 .ui-button-text-icons .ui-button-icon-primary, 
 .ui-button-icons-only .ui-button-icon-primary {
 	left: .4em; 
+	*left: 2px;
 }
 
 .ui-button-text-icon-secondary .ui-button-icon-secondary, 
 .ui-button-text-icons .ui-button-icon-secondary, 
 .ui-button-icons-only .ui-button-icon-secondary {
 	right: .4em; 
+	*right: 2px;
 }
 
 .ui-button-text-icons .ui-button-icon-secondary, 
 .ui-button-icons-only .ui-button-icon-secondary {
 	right: .4em; 
+	*right: 2px;
 }
 
 /* Button sets*/
@@ -467,7 +469,9 @@ table.group {
 
 .assessments-container {
 }	
-
+.assessments td{
+	text-align: center;
+}
 .completed-table {
 	margin: 0 auto;
 	width: 75%;
@@ -739,7 +743,12 @@ table.clearall-result td {
 .list-radio .question-answer li label,
 .list-with-comment .question-answer li label {
   display: inline-block;
+  *display:inline;
   width: 85%;
+}
+.list-radio .question-answer ul.colstyle-css li label, .list-radio .question-answer ul.colstyle-ul li label, .list-radio .question-answer table.colstyle-table li label, 
+.list-with-comment .question-answer ul.colstyle-css li label, .list-with-comment .question-answer ul.colstyle-ul li label, .list-with-comment .question-answer table.colstyle-table li label {
+    display: inline;
 }
 .list-radio .question-answer li.other-item label,
 .list-with-comment .question-answer li.other-item label {
@@ -858,7 +867,12 @@ table.rank td.helptext {
 }
 .multiple-opt .question-answer li label , .multiple-opt-comments .question-answer li .option label {
   display: inline-block;
+  *display:inline;
   width: 90%;
+}
+.multiple-opt .question-answer ul.colstyle-css li label, .multiple-opt .question-answer ul.colstyle-ul li label, .multiple-opt .question-answer table.colstyle-table li label,
+.multiple-opt-comments .question-answer ul.colstyle-css li label, .multiple-opt-comments .question-answer ul.colstyle-ul li label, .multiple-opt-comments .question-answer table.colstyle-table li label {
+    display: inline;
 }
 .multiple-opt .question-answer li.other-item label {
   width: auto;
@@ -874,6 +888,15 @@ table.rank td.helptext {
   display: table;
   padding: 0;
   margin: 0.5em 0.5em 0.5em 0.7em;
+}
+
+ul.checkbox-text-list {
+    width: 99%;
+}
+
+ul.checkbox-text-list span {
+	vertical-align: top !important;
+	width: 50%;
 }
 
 .numeric-multi ul {
@@ -1349,6 +1372,7 @@ td.statsImageholder {
   width: 3em;
   text-align: right;
   display: inline-block;
+  *display:inline;
   padding: 0 0.5em 0 0;
 }
 

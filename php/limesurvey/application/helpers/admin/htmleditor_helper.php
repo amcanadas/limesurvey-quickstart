@@ -10,8 +10,7 @@
     * other free or open source software licenses.
     * See COPYRIGHT.php for copyright notices and details.
     *
-    *	$Id$
-    */
+       */
     //include_once("login_check.php");
     //Security Checked: POST/GET/SESSION/DB/returnGlobal
     function initKcfinder()
@@ -39,12 +38,26 @@
                 $contextarray = explode(':', Yii::app()->session['FileManagerContext'], 3);
                 $surveyid = $contextarray[2];
 
-                if (hasSurveyPermission($surveyid, 'surveycontent', 'update'))
+                if (Permission::model()->hasSurveyPermission($surveyid, 'surveycontent', 'update'))
                 {
                     $_SESSION['KCFINDER']['disabled'] = false;
                     if (preg_match('/^edit:emailsettings/',$_SESSION['FileManagerContext']) != 0)
                     {
-                        $_SESSION['KCFINDER']['uploadURL'] = Yii::app()->getRequest()->getHostInfo().Yii::app()->getConfig('uploadurl')."/surveys/{$surveyid}/";
+                        // Uploadurl use public url or getBaseUrl(true);
+                        // Maybe need external function
+                        $sBaseAbsoluteUrl=Yii::app()->getBaseUrl(true);
+                        $sPublicUrl=Yii::app()->getConfig("publicurl");
+                        $aPublicUrl=parse_url($sPublicUrl);
+                        if(isset($aPublicUrl['scheme']) && isset($aPublicUrl['host']))
+                        {
+                            $sBaseAbsoluteUrl=$sPublicUrl;
+                        }
+                        $sBaseUrl=Yii::app()->getBaseUrl();
+                        $sUploadUrl=Yii::app()->getConfig('uploadurl');
+                        if (substr($sUploadUrl, 0, strlen($sBaseUrl)) == $sBaseUrl) {
+                            $sUploadUrl = substr($sUploadUrl, strlen($sBaseUrl));
+                        }
+                        $_SESSION['KCFINDER']['uploadURL'] = trim($sBaseAbsoluteUrl,"/").$sUploadUrl."/surveys/{$surveyid}/";
                     }
                     else
                     {
@@ -58,7 +71,7 @@
                 $contextarray = explode(':', Yii::app()->session['FileManagerContext'], 3);
                 $labelid = $contextarray[2];
                 // check if the user has label management right and labelid defined
-                if (Yii::app()->session['USER_RIGHT_MANAGE_LABEL'] == 1 && isset($labelid) && $labelid != '')
+                if (Permission::model()->hasGlobalPermission('labelsets','update') && isset($labelid) && $labelid != '')
                 {
                     $_SESSION['KCFINDER']['disabled'] = false;
                     $_SESSION['KCFINDER']['uploadURL'] = Yii::app()->getConfig('uploadurl')."/labels/{$labelid}/";
@@ -66,45 +79,49 @@
                 }
             }
         }
-
-    } 
+    }
 
     function sTranslateLangCode2CK($sLanguageCode){
-
-        $aTranslationTable=array('de-informal'=>'de',
-        'nl-formal'=>'nl');
+        $aTranslationTable=array(
+        'ca-valencia'=>'ca',
+        'de-informal'=>'de',
+        'es-AR-informal'=>'es',
+        'es-AR'=>'es',
+        'es-CL'=>'es',
+        'es-MX'=>'es',
+        'it-informal'=>'it',
+        'nl-informal'=>'nl',
+        'nn'=>'no',
+        'zh-Hans'=>'zh-cn',
+        'zh-Hant-HK'=>'zh',
+        'zh-Hant-TW'=>'zh'
+        );
         if (isset($aTranslationTable[$sLanguageCode])) {
             $sResultCode=$aTranslationTable[$sLanguageCode];
         }
         else
         {
-            $sResultCode=$sLanguageCode;
+            $sResultCode=strtolower($sLanguageCode);
         }
         return $sResultCode;
-
     }
 
 
     function PrepareEditorScript($load=false, $controller = null)
     {
-        $js_admin_includes = Yii::app()->getConfig("js_admin_includes");
-        $clang = Yii::app()->lang;
-        $data['clang'] = $clang;
-        $js_admin_includes[]=Yii::app()->getConfig('sCKEditorURL').'/ckeditor.js';
-        Yii::app()->setConfig("js_admin_includes", $js_admin_includes);
+        App()->getClientScript()->registerCoreScript('ckeditor');
         if ($controller == null)
         {
             $controller = Yii::app()->getController();
         }
-
         if ($load == false)
         {
 
-            return $controller->render('/admin/survey/prepareEditorScript_view',$data,true);
+            return $controller->renderPartial('/admin/survey/prepareEditorScript_view',array(),true);
         }
         else
         {
-            $controller->render('/admin/survey/prepareEditorScript_view',$data);
+            $controller->renderPartial('/admin/survey/prepareEditorScript_view',array());
         }
     }
 
@@ -134,6 +151,8 @@
 
         if ( ($fieldtype == 'email-inv' ||
         $fieldtype == 'email-reg' ||
+        $fieldtype == 'email-admin-notification' ||
+        $fieldtype == 'email-admin-resp' ||
         $fieldtype == 'email-conf' ||
         $fieldtype == 'email-rem' ) &&
         getEmailFormat($surveyID) != 'html')
@@ -161,7 +180,7 @@
 
     function getPopupEditor($fieldtype,$fieldname,$fieldtext, $surveyID=null,$gID=null,$qID=null,$action=null)
     {
-        $clang = Yii::app()->lang;
+
         $htmlcode = '';
         $imgopts = '';
         $toolbarname = 'Basic';
@@ -175,9 +194,9 @@
         }
 
         $htmlcode .= ""
-        . "<a href=\"javascript:start_popup_editor('".$fieldname."','".$fieldtext."','".$surveyID."','".$gID."','".$qID."','".$fieldtype."','".$action."')\" id='".$fieldname."_ctrl' class='editorLink'>\n"
-        . "\t<img alt=\"".$clang->gT("Start HTML editor in a popup window")."\" id='".$fieldname."_popupctrlena' src='".Yii::app()->getConfig('adminimageurl')."edithtmlpopup.png' $imgopts class='btneditanswerena' />\n"
-        . "\t<img alt=\"".$clang->gT("Give focus to the HTML editor popup window")."\" id='".$fieldname."_popupctrldis' src='".Yii::app()->getConfig('adminimageurl')."edithtmlpopup_disabled.png' style='display:none' $imgopts class='btneditanswerdis' />\n"
+        . "<a href=\"javascript:start_popup_editor('".$fieldname."','".addslashes(htmlspecialchars_decode($fieldtext,ENT_QUOTES))."','".$surveyID."','".$gID."','".$qID."','".$fieldtype."','".$action."')\" id='".$fieldname."_ctrl' class='editorLink'>\n"
+        . "\t<img alt=\"".gT("Start HTML editor in a popup window")."\" id='".$fieldname."_popupctrlena' src='".Yii::app()->getConfig('adminimageurl')."edithtmlpopup.png' $imgopts class='btneditanswerena' />\n"
+        . "\t<img alt=\"".gT("Give focus to the HTML editor popup window")."\" id='".$fieldname."_popupctrldis' src='".Yii::app()->getConfig('adminimageurl')."edithtmlpopup_disabled.png' style='display:none' $imgopts class='btneditanswerdis' />\n"
         . "</a>\n";
 
         return $htmlcode;
@@ -232,10 +251,11 @@
             ,filebrowserImageUploadUrl:'{$sFakeBrowserURL}'
             ,filebrowserFlashUploadUrl:'{$sFakeBrowserURL}'";
         }
-        
+
         $htmlcode .= ""
         . "<script type=\"text/javascript\">\n"
-        . "$(document).ready(function(){ var $oCKeditorVarName = CKEDITOR.replace('$fieldname', {
+        . "$(document).ready(
+        function(){ var $oCKeditorVarName = CKEDITOR.replace('$fieldname', {
         customConfig : \"".Yii::app()->getConfig('adminscripts')."ckeditor-config.js\"
         ,LimeReplacementFieldsType : \"".$fieldtype."\"
         ,LimeReplacementFieldsSID : \"".$surveyID."\"
@@ -253,7 +273,7 @@
         ."});
         \$('#$fieldname').parents('ul:eq(0)').addClass('editor-parent');
         });";
-        
+
 
         $htmlcode.= '</script>';
 
