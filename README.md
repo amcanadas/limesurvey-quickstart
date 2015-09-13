@@ -11,11 +11,18 @@ Create an account at https://www.openshift.com and install the client tools (rhc
 
 Create a PHP application
 
-	rhc app create limesurvey php-5.4 postgresql-9.2 --from-code=https://github.com/amcanadas/limesurvey-quickstart.git
-
+	rhc app create limesurvey php-5.3 mysql-5.1 --from-code=https://github.com/amcanadas/limesurvey-quickstart.git
 
 That's it, you can now checkout your application at:
 
 	http://limesurvey-$yournamespace.rhcloud.com/limesurvey
 
+Note: to get database configuration information use
 
+	rhc ssh limesurvey
+	env | grep MYSQL
+
+to resolve tmp access problem:
+
+	chmod a+w app-root/runtime/repo/php/limesurvey/tmp
+	mkdir app-root/runtime/repo/php/limesurvey/tmp/assets
